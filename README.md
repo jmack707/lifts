@@ -8,15 +8,20 @@ A simple, private workout tracker that runs entirely in your browser. No account
 
 ## Features
 
-- **Plan your workout** — pick the exercises you're doing today, in the order you want them
+- **Programs** — follow a structured routine (StrongLifts 5×5, GZCLP built in) that rotates through workout days and tells you exactly what to lift next
+- **Prescribed sets** — the app pre-fills each set's target weight and reps from your working weight; AMRAP sets are flagged
+- **Automatic progression** — hit all your sets and the weight goes up next session; miss it a few times and it deloads — all handled for you
+- **Plan your own workout** — or pick exercises freely, in the order you want them
 - **Log sets** — weight and reps for each set, with add/remove set and one-tap complete
+- **Warm-up sets** — one tap builds a bar → 50/70/90% ramp toward your working weight, rounded to loadable plates
+- **kg or lb** — switch units anytime; plate inventory and bar weight follow
 - **Bodyweight exercises** — leave weight blank; the app tracks reps (and uses your bodyweight for volume if set)
 - **Rest timer** — auto-starts when you check off a set, with a countdown ring, beep, and vibration
 - **Personal records** — automatic PR detection with a confetti celebration 🎉
 - **History** — every past session, grouped by month
 - **Progress charts** — estimated 1RM, session volume, and weekly volume over time per exercise
 - **Templates** — save and reload your regular workouts
-- **Plate calculator** — shows which plates to load for any target weight
+- **Plate calculator** — shows which plates to load for any target weight, from your own plate inventory
 - **Streak tracking** — day streak and weekly session count
 - **Backup & restore** — export/import your data as a JSON file (great with Google Drive)
 - **Works offline** — installable as a phone app (PWA)

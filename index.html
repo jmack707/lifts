@@ -190,6 +190,50 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);
 .seg-opt{padding:8px 14px;border-radius:8px;font-size:12px;font-weight:700;
   border:1px solid var(--border);background:var(--s2);color:var(--muted);cursor:pointer;}
 .seg-opt.on{background:var(--s3);color:var(--text);border-color:var(--border2);}
+.plate-inv{display:flex;flex-wrap:wrap;gap:7px;}
+.plate-chip{padding:7px 12px;border-radius:8px;font-family:'DM Mono',monospace;font-size:13px;
+  font-weight:500;border:1px solid var(--border);background:var(--s2);color:var(--muted2);cursor:pointer;}
+.plate-chip.on{background:var(--s3);color:var(--text);border-color:var(--border2);}
+
+/* ── Warmup set rows ── */
+.set-row.warm .set-input{opacity:.65;}
+.warm-tag{width:34px;height:42px;display:flex;align-items:center;justify-content:center;
+  font-size:10px;font-weight:700;color:var(--gold);letter-spacing:.04em;}
+.warm-btn{background:var(--s3);border:1px solid var(--border2);border-radius:7px;
+  color:var(--gold);font-size:11px;font-weight:700;padding:4px 9px;cursor:pointer;}
+
+/* ── Prescribed / target hint ── */
+.set-target{font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);
+  text-align:center;padding:1px 0 4px;grid-column:2 / 4;}
+.amrap-badge{font-size:8px;font-weight:700;background:var(--upper);color:#fff;
+  padding:1px 4px;border-radius:3px;margin-left:4px;letter-spacing:.04em;}
+.prescribe-note{font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;
+  padding:0 12px 6px;}
+
+/* ── Programs ── */
+.prog-active-card{margin:2px 0 6px;padding:12px 14px;border-radius:var(--r);
+  background:rgba(155,114,207,.1);border:1px solid rgba(155,114,207,.28);}
+.prog-active-top{display:flex;align-items:center;gap:8px;margin-bottom:3px;}
+.prog-active-name{font-weight:700;font-size:14px;flex:1;color:var(--purple);}
+.prog-active-day{font-family:'DM Mono',monospace;font-size:12px;color:var(--text);margin-bottom:10px;}
+.prog-active-ex{font-size:11px;color:var(--muted);margin-bottom:12px;line-height:1.5;}
+.prog-start-btn{width:100%;padding:12px;background:var(--purple);color:#fff;border:none;
+  border-radius:9px;font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:.08em;cursor:pointer;}
+.prog-mini-btn{background:none;border:none;color:var(--purple);font-size:16px;cursor:pointer;padding:2px 4px;}
+.prog-list{display:flex;flex-direction:column;gap:8px;margin-bottom:8px;}
+.prog-card{background:var(--s2);border:1px solid var(--border);border-radius:10px;
+  padding:12px 14px;display:flex;align-items:center;gap:10px;}
+.prog-card.on{border-color:rgba(155,114,207,.5);background:rgba(155,114,207,.08);}
+.prog-info{flex:1;}
+.prog-name-lbl{font-size:14px;font-weight:700;}
+.prog-day-preview{font-size:11px;color:var(--muted);margin-top:3px;}
+.prog-act-btn{background:var(--purple);color:#fff;border:none;border-radius:7px;
+  padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer;}
+.prog-act-btn.ghost{background:var(--s3);color:var(--muted);}
+.prog-setup-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border2);}
+.prog-setup-name{flex:1;font-size:13px;font-weight:600;}
+.prog-setup-input{width:90px;background:var(--s3);border:1px solid var(--border);border-radius:8px;
+  color:var(--text);font-family:'DM Mono',monospace;font-size:15px;padding:8px;text-align:center;outline:none;}
 
 /* ── Plate calculator ── */
 .plate-calc-input-row{display:flex;gap:10px;align-items:center;margin-bottom:16px;}
@@ -541,6 +585,7 @@ margin-bottom:10px;padding:14px;
       <div class="app-name">LIFTS</div>
       <button class="icon-btn" onclick="showHelp()" title="Help">❓</button>
       <button class="icon-btn" onclick="showPlateCalc()" title="Plate Calculator">🔢</button>
+      <button class="icon-btn" onclick="showPrograms()" title="Programs">📚</button>
       <button class="icon-btn" onclick="showTemplates()" title="Templates">📋</button>
       <button class="date-btn" onclick="document.getElementById('workout-date').showPicker?.()??document.getElementById('workout-date').click()">
         📅 <span id="date-display">Today</span>
@@ -641,17 +686,31 @@ margin-bottom:10px;padding:14px;
     <div class="modal-title">Settings</div>
     <div class="setting-row">
       <div class="setting-info">
+        <div class="setting-lbl">Units</div>
+        <div class="setting-sub">Weight unit for entry and display</div>
+      </div>
+      <div class="seg-ctrl" id="unit-seg"></div>
+    </div>
+    <div class="setting-row">
+      <div class="setting-info">
         <div class="setting-lbl">Bodyweight</div>
         <div class="setting-sub">Used to calculate volume for BW exercises</div>
       </div>
-      <input class="setting-input" type="number" inputmode="decimal" id="set-bw" placeholder="lbs">
+      <input class="setting-input" type="number" inputmode="decimal" id="set-bw">
     </div>
     <div class="setting-row">
       <div class="setting-info">
         <div class="setting-lbl">Bar Weight</div>
-        <div class="setting-sub">Standard bar for plate calculator</div>
+        <div class="setting-sub">Standard bar for plate calculator &amp; warmups</div>
       </div>
-      <input class="setting-input" type="number" inputmode="decimal" id="set-bar" placeholder="lbs">
+      <input class="setting-input" type="number" inputmode="decimal" id="set-bar">
+    </div>
+    <div class="setting-row" style="display:block">
+      <div class="setting-info" style="margin-bottom:9px">
+        <div class="setting-lbl">Available Plates</div>
+        <div class="setting-sub">Tap the plates you own (per side). Used by the calculator, warmups &amp; rounding.</div>
+      </div>
+      <div class="plate-inv" id="plate-inv"></div>
     </div>
     <div class="setting-row">
       <div class="setting-info">
@@ -673,11 +732,20 @@ margin-bottom:10px;padding:14px;
     <div class="modal-title">🔢 Plate Calculator</div>
     <div class="plate-calc-input-row">
       <input class="plate-big-input" type="number" inputmode="decimal" id="plate-target"
-        placeholder="Target weight (lbs)" oninput="calcPlates()">
+        placeholder="Target weight" oninput="calcPlates()">
     </div>
     <div class="bar-lbl" id="bar-lbl"></div>
     <div class="plate-side">Per Side</div>
     <div id="plate-result"></div>
+  </div>
+</div>
+
+<!-- PROGRAMS MODAL -->
+<div class="modal-bg" id="modal-programs" onclick="closeModal('programs')">
+  <div class="modal-sheet" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div>
+    <div class="modal-title">📚 Programs</div>
+    <div id="prog-modal-body"></div>
   </div>
 </div>
 
@@ -708,6 +776,7 @@ margin-bottom:10px;padding:14px;
   <div class="summary-vol-lbl">Total Volume Lifted</div>
   <div class="summary-streak" id="sum-streak"></div>
   <div class="summary-prs" id="sum-prs"></div>
+  <div class="summary-prs" id="sum-progression"></div>
   <div class="summary-exlist" id="sum-exlist"></div>
   <button class="summary-done-btn" onclick="dismissSummary()">Done</button>
 </div>
@@ -757,6 +826,25 @@ margin-bottom:10px;padding:14px;
         <div class="help-icon">4️⃣</div>
         <div class="help-text"><div class="help-label">Tap LOG WORKOUT when you're finished</div>
           <div class="help-desc">This saves everything. You'll see a fun summary of what you did. If you lifted more than ever before, you get confetti! 🎉</div></div>
+      </div>
+    </div>
+
+    <div class="help-section">
+      <div class="help-section-title">Follow a Program (Optional)</div>
+      <div class="help-item">
+        <div class="help-icon">📚</div>
+        <div class="help-text"><div class="help-label">Let the app plan for you</div>
+          <div class="help-desc">Tap 📚 at the top and pick a program like StrongLifts 5×5 or GZCLP. Type your starting weight for each lift once. From then on, the start screen shows your next workout day — tap it and every set is pre-filled with the exact weight and reps to do.</div></div>
+      </div>
+      <div class="help-item">
+        <div class="help-icon">📈</div>
+        <div class="help-text"><div class="help-label">The weight goes up by itself</div>
+          <div class="help-desc">Finish all your sets and log the workout — the app adds weight for next time automatically. Miss your reps a few sessions in a row and it backs the weight off (a "deload") so you can build back up. You'll see the new weights on the finish screen.</div></div>
+      </div>
+      <div class="help-item">
+        <div class="help-icon">🔥</div>
+        <div class="help-text"><div class="help-label">Warm-up sets</div>
+          <div class="help-desc">On any exercise, tap <b>🔥 Warm-ups</b> and the app adds a few lighter build-up sets leading to your working weight. They don't count toward your totals or records.</div></div>
       </div>
     </div>
 
@@ -899,12 +987,73 @@ const DEF_EX = {
 };
 const SEC_CLS = {'Core':'core','Upper Body':'upper','Lower Body':'lower'};
 const ACCENT  = {core:'#E05252',upper:'#4A9EE0',lower:'#3EC878',custom:'#9B72CF'};
+// Plate colours cover both lb and kg denominations (keyed by weight number).
 const PLATE_COLORS = {45:{bg:'#1A6BB5',fg:'#fff'},35:{bg:'#D4A017',fg:'#000'},
-  25:{bg:'#2E7D32',fg:'#fff'},10:{bg:'#555',fg:'#fff'},5:{bg:'#1A5FA8',fg:'#fff'},2.5:{bg:'#C62828',fg:'#fff'}};
+  25:{bg:'#C62828',fg:'#fff'},20:{bg:'#1A6BB5',fg:'#fff'},15:{bg:'#D4A017',fg:'#000'},
+  10:{bg:'#2E7D32',fg:'#fff'},5:{bg:'#e8e8ee',fg:'#000'},2.5:{bg:'#333',fg:'#fff'},1.25:{bg:'#8a8aa0',fg:'#000'}};
+
+// ── Units ─────────────────────────────────────────────────────────────────────
+// A workout stays in one unit. Switching units only re-labels the UI and swaps
+// bar/plate defaults — historical numbers are left as logged.
+const UNIT_DEFAULTS = {
+  lb: {bar:45, plates:[45,35,25,10,5,2.5]},
+  kg: {bar:20, plates:[25,20,15,10,5,2.5,1.25]}
+};
+function U(){ return settings && settings.unit==='kg' ? 'kg' : 'lb'; }
+function fmtW(v){ return (Math.round(v*10)/10).toLocaleString() + ' ' + U(); }
+// Smallest weight step you can add to a bar = 2× the smallest available plate.
+function minStep(){ const p=(settings.plates||UNIT_DEFAULTS[U()].plates); return 2*Math.min(...p); }
+// Round a target weight to something loadable on the bar with available plates.
+function roundLoadable(w){
+  const bar=settings.bar||UNIT_DEFAULTS[U()].bar, step=minStep();
+  if(w<=bar) return bar;
+  return bar + Math.round((w-bar)/step)*step;
+}
+
+// ── Built-in programs ─────────────────────────────────────────────────────────
+// scheme: {sets, reps, amrap} — straight-weight linear progression.
+const BUILTIN_PROGRAMS = [
+  { id:'sl5x5', name:'StrongLifts 5×5', builtin:true,
+    section:'Lower Body',
+    days:[
+      { name:'Workout A', exercises:[
+        {ex:'Back Squat',    scheme:{sets:5,reps:5}, start:{lb:45,kg:20}, inc:{lb:5,kg:2.5}},
+        {ex:'Bench Press',   scheme:{sets:5,reps:5}, start:{lb:45,kg:20}, inc:{lb:5,kg:2.5}},
+        {ex:'Bent-Over Row', scheme:{sets:5,reps:5}, start:{lb:65,kg:30}, inc:{lb:5,kg:2.5}}
+      ]},
+      { name:'Workout B', exercises:[
+        {ex:'Back Squat',    scheme:{sets:5,reps:5}, start:{lb:45,kg:20}, inc:{lb:5,kg:2.5}},
+        {ex:'Overhead Press',scheme:{sets:5,reps:5}, start:{lb:45,kg:20}, inc:{lb:5,kg:2.5}},
+        {ex:'Deadlift',      scheme:{sets:1,reps:5}, start:{lb:95,kg:40}, inc:{lb:10,kg:5}}
+      ]}
+    ]},
+  { id:'gzclp', name:'GZCLP', builtin:true,
+    section:'Lower Body',
+    days:[
+      { name:'Day A1', exercises:[
+        {ex:'Back Squat',    scheme:{sets:5,reps:3,amrap:true}, start:{lb:85,kg:40}, inc:{lb:10,kg:5}},
+        {ex:'Bench Press',   scheme:{sets:3,reps:10},           start:{lb:65,kg:30}, inc:{lb:5,kg:2.5}}
+      ]},
+      { name:'Day B1', exercises:[
+        {ex:'Overhead Press',scheme:{sets:5,reps:3,amrap:true}, start:{lb:45,kg:20}, inc:{lb:5,kg:2.5}},
+        {ex:'Deadlift',      scheme:{sets:3,reps:10},           start:{lb:95,kg:45}, inc:{lb:10,kg:5}}
+      ]},
+      { name:'Day A2', exercises:[
+        {ex:'Bench Press',   scheme:{sets:5,reps:3,amrap:true}, start:{lb:75,kg:35}, inc:{lb:5,kg:2.5}},
+        {ex:'Back Squat',    scheme:{sets:3,reps:10},           start:{lb:65,kg:30}, inc:{lb:10,kg:5}}
+      ]},
+      { name:'Day B2', exercises:[
+        {ex:'Deadlift',      scheme:{sets:5,reps:3,amrap:true}, start:{lb:115,kg:52.5}, inc:{lb:10,kg:5}},
+        {ex:'Overhead Press',scheme:{sets:3,reps:10},           start:{lb:40,kg:17.5}, inc:{lb:5,kg:2.5}}
+      ]}
+    ]}
+];
 
 // ── State ─────────────────────────────────────────────────────────────────────
 let sections, exercises, sessions, prs, draft, templates, settings;
+let programs, programState, exMeta;   // programs, {programId,dayIndex}, per-exercise {weight,inc,fails}
 let workoutPlan = null;
+let workoutProgram = null;            // {programId,dayIndex,dayName} when the active workout came from a program
 let workoutDate = new Date().toISOString().slice(0,10);
 let activeSection = '', activeTab = 'log', selectedEx = null, progChartMode = '1rm';
 
@@ -920,11 +1069,21 @@ function loadAll() {
   draft     = load('wt_draft',{});
   templates = load('wt_tmpls',[]);
   settings  = load('wt_set',  {bw:0, bar:45, rest:90});
+  programs  = load('wt_programs', null);
+  programState = load('wt_progstate', null);
+  exMeta    = load('wt_exmeta', {});
+  // Backfill fields added by later versions.
+  if(!settings.unit)   settings.unit = 'lb';
+  if(!settings.plates) settings.plates = [...UNIT_DEFAULTS[U()].plates];
+  if(settings.bar==null) settings.bar = UNIT_DEFAULTS[U()].bar;
+  // Seed built-in programs (kept fresh) alongside any user programs.
+  const userPrograms = (programs||[]).filter(p=>!p.builtin);
+  programs = [...JSON.parse(JSON.stringify(BUILTIN_PROGRAMS)), ...userPrograms];
   document.getElementById('workout-date').value = workoutDate;
   updateDateDisplay();
 }
-function saveAll()     { ['wt_secs','wt_exs','wt_sess','wt_prs','wt_tmpls','wt_set']
-  .forEach((k,i)=>localStorage.setItem(k, JSON.stringify([sections,exercises,sessions,prs,templates,settings][i]))); }
+function saveAll()     { ['wt_secs','wt_exs','wt_sess','wt_prs','wt_tmpls','wt_set','wt_programs','wt_progstate','wt_exmeta']
+  .forEach((k,i)=>localStorage.setItem(k, JSON.stringify([sections,exercises,sessions,prs,templates,settings,(programs||[]).filter(p=>!p.builtin),programState,exMeta][i]))); }
 function saveDraft()   { localStorage.setItem('wt_draft', JSON.stringify(draft)); }
 
 // ── Date ──────────────────────────────────────────────────────────────────────
@@ -1057,6 +1216,25 @@ function renderStartScreen() {
   html += '<div class="start-title">Start Your Workout</div>';
   html += '<div class="start-sub">Tap the exercises you\'re doing today, then hit Start.</div>';
 
+  const activeProg = currentProgram();
+  if(activeProg){
+    const di = programState.dayIndex||0;
+    const day = activeProg.days[di];
+    const preview = day.exercises.map(de=>{
+      const m=exMeta[de.ex]; const w=m&&m.weight>0?` ${m.weight}${U()}`:'';
+      return `${de.ex} ${schemeLabel(de.scheme)}${w}`;
+    }).join(' · ');
+    html += `<div class="prog-active-card">
+      <div class="prog-active-top">
+        <div class="prog-active-name">📚 ${activeProg.name}</div>
+        <button class="prog-mini-btn" onclick="showPrograms()" title="Manage program">⚙</button>
+      </div>
+      <div class="prog-active-day">Next: ${day.name}</div>
+      <div class="prog-active-ex">${preview}</div>
+      <button class="prog-start-btn" onclick="startProgramDay()">START ${day.name.toUpperCase()}</button>
+    </div>`;
+  }
+
   if(templates.length){
     html += '<div class="start-sec-lbl">⚡ Quick start from a template</div>';
     html += '<div class="tmpl-chips">';
@@ -1133,6 +1311,7 @@ function endWorkout(){
   const hasData = Object.values(draft).some(d=>d&&(d.sets||[]).some(s=>s.w||s.r));
   if(hasData && !confirm('End this workout without logging? Your entries will be cleared.')) return;
   workoutPlan = null;
+  workoutProgram = null;
   builderSelected = new Set();
   draft = {}; saveDraft();
   buildLog();
@@ -1154,23 +1333,29 @@ function buildCard(sec, ex) {
   for(let i=0;i<n;i++){
     const s=d.sets[i]||{w:'',r:'',done:false};
     const doneCls = s.done ? 'done' : '';
-    rows += `<div class="set-row ${doneCls}" id="sr-${ke}-${i}">
-      <div class="set-check ${s.done?'done':''}" id="chk-${ke}-${i}"
-        onclick="toggleDone('${ex}',${i})">
-        ${s.done ? '✓' : '○'}
-      </div>
-      <input type="number" inputmode="decimal" placeholder="${bw?settings.bw+' bw':'lbs'}"
+    const check = s.warm
+      ? `<div class="set-check ${s.done?'done':''}" id="chk-${ke}-${i}" onclick="toggleDone('${ex}',${i})"
+           style="flex-direction:column;gap:0"><span style="font-size:8px;font-weight:700;color:var(--gold);line-height:1">W</span>${s.done?'✓':'○'}</div>`
+      : `<div class="set-check ${s.done?'done':''}" id="chk-${ke}-${i}" onclick="toggleDone('${ex}',${i})">${s.done ? '✓' : '○'}</div>`;
+    const target = (!s.warm && s.tr) ? `<div class="set-target">target ${s.tw?s.tw+' × ':''}${s.tr}${s.amrap?'<span class="amrap-badge">AMRAP</span>':''}</div>` : '';
+    rows += `<div class="set-row ${doneCls} ${s.warm?'warm':''}" id="sr-${ke}-${i}">
+      ${check}
+      <input type="number" inputmode="decimal" placeholder="${s.warm?'warm':(bw?settings.bw+' bw':U())}"
         class="set-input" value="${s.w}"
         data-ex="${ex}" data-set="${i}" data-t="w" oninput="onInput(this)">
-      <input type="number" inputmode="numeric" placeholder="reps"
+      <input type="number" inputmode="numeric" placeholder="${s.amrap?'AMRAP':'reps'}"
         class="set-input" value="${s.r}"
         data-ex="${ex}" data-set="${i}" data-t="r" oninput="onInput(this)">
+      ${target}
     </div>`;
   }
   const hasNotes = d.notes && d.notes.trim();
-  const filled = d.sets.filter(s=>parseFloat(s.r)>0||parseFloat(s.w)>0);
+  const filled = d.sets.filter(s=>!s.warm&&(parseFloat(s.r)>0||parseFloat(s.w)>0));
   const allDone = filled.length>0 && filled.every(s=>s.done);
   const cardCls = 'ex-card' + (allDone ? ' all-done collapsed' : '');
+  const meta = exMeta[ex];
+  const prescribeNote = d.prescribed && meta && meta.weight>0
+    ? `<div class="prescribe-note">Prescribed: working weight ${fmtW(meta.weight)}</div>` : '';
   return `<div class="${cardCls}" id="ec-${ke}">
     <div class="ex-card-hdr" onclick="toggleCollapse('${ex}')">
       <div class="ex-name">${ex}</div>
@@ -1181,10 +1366,12 @@ function buildCard(sec, ex) {
       <div class="pr-tag" id="prtag-${ke}">PR ⚡</div>
     </div>
     <div class="ex-card-summary" id="esum-${ke}"></div>
+    ${prescribeNote}
     <div class="set-rows">${rows}</div>
     <div class="set-controls">
       <button class="set-ctrl-btn" onclick="removeSet('${ex}')" ${n<=1?'disabled':''}>− Set</button>
       <button class="set-ctrl-btn" onclick="addSet('${ex}')">+ Set</button>
+      <button class="warm-btn" onclick="addWarmups('${ex}')" title="Add warm-up sets">🔥 Warm-ups</button>
       <button class="complete-btn" onclick="completeExercise('${ex}')">✓ Complete</button>
     </div>
     <div class="ex-notes-wrap ${hasNotes?'open':''}" id="nwrap-${ke}">
@@ -1233,6 +1420,30 @@ function completeExercise(ex){
   saveDraft();
   refreshCard(ex);
   showToast('✓ '+ex+' complete');
+}
+
+// ── Warm-up sets ────────────────────────────────────────────────
+// Build a ramp (bar → 50% → 70% → 90%) toward the heaviest working set,
+// rounded to loadable weights. Warm-up sets are prep only: they don't count
+// toward volume, 1RM, PRs, or progression.
+function addWarmups(ex){
+  const d = getDraft(ex);
+  const work = Math.max(0, ...d.sets.filter(s=>!s.warm).map(s=>parseFloat(s.w)||0));
+  if(!(work>0)){ showToast('Enter your working weight first'); return; }
+  const bar = settings.bar||UNIT_DEFAULTS[U()].bar;
+  const working = d.sets.filter(s=>!s.warm);   // keep the real sets
+  const warm = [];
+  if(work > bar + minStep()) warm.push({w:bar, r:5, done:false, warm:true});
+  [[0.5,5],[0.7,3],[0.9,2]].forEach(([pct,reps])=>{
+    const w = roundLoadable(work*pct);
+    if(w>bar && w<work) warm.push({w, r:reps, done:false, warm:true});
+  });
+  // De-dupe warm-ups that round to the same weight.
+  const seen=new Set(); const uniq=warm.filter(s=>seen.has(s.w)?false:(seen.add(s.w),true));
+  if(!uniq.length){ showToast('Working weight too light for warm-ups'); return; }
+  d.sets = [...uniq, ...working];
+  saveDraft(); refreshCard(ex);
+  showToast('🔥 Added '+uniq.length+' warm-up set'+(uniq.length>1?'s':''));
 }
 
 function getDraft(ex) {
@@ -1284,7 +1495,7 @@ function toggleDone(ex, i) {
   updateCardSummary(ex);
   if(d.sets[i].done) {
     const w=parseFloat(d.sets[i].w)||0, r=parseFloat(d.sets[i].r)||0;
-    const info = w>0 ? `Set ${i+1}: ${w} lbs × ${r}` : `Set ${i+1}: ${r} reps (BW)`;
+    const info = w>0 ? `Set ${i+1}: ${w} ${U()} × ${r}` : `Set ${i+1}: ${r} reps (BW)`;
     startRest(ex, info);
   }
 }
@@ -1306,8 +1517,9 @@ function calcCard(ex) {
   const d=getDraft(ex);
   let vol=0,maxOrm=0,totalReps=0,maxReps=0;
   const bw=settings.bw||0;
-  d.sets.forEach(({w,r})=>{
-    const wv=parseFloat(w)||0, rv=parseFloat(r)||0;
+  d.sets.forEach(s=>{
+    if(s.warm) return;
+    const wv=parseFloat(s.w)||0, rv=parseFloat(s.r)||0;
     if(rv>0){ totalReps+=rv; if(rv>maxReps) maxReps=rv; }
     const ew = wv>0?wv:(bw>0?bw:0);
     if(ew>0&&rv>0){ vol+=ew*rv; const o=ew*(1+rv/30); if(o>maxOrm) maxOrm=o; }
@@ -1317,10 +1529,10 @@ function calcCard(ex) {
   const oEl=document.getElementById('eorm-'+ke);
   const prEl=document.getElementById('prtag-'+ke);
   if(!vEl) return;
-  const hasW = d.sets.some(s=>parseFloat(s.w)>0)||(bw>0&&totalReps>0);
+  const hasW = d.sets.some(s=>!s.warm&&parseFloat(s.w)>0)||(bw>0&&totalReps>0);
   if(!totalReps){ vEl.textContent='—'; oEl.textContent='—'; }
   else if(!hasW){ vEl.textContent=totalReps+' reps'; oEl.textContent='BW'; }
-  else { vEl.textContent=vol>0?vol.toLocaleString()+' lbs':'—'; oEl.textContent=maxOrm>0?maxOrm.toFixed(1):'—'; }
+  else { vEl.textContent=vol>0?vol.toLocaleString()+' '+U():'—'; oEl.textContent=maxOrm>0?maxOrm.toFixed(1):'—'; }
   const isPR=maxOrm>0&&(!prs[ex]||maxOrm>(prs[ex].orm||0));
   if(prEl) prEl.classList.toggle('show',isPR);
 }
@@ -1331,11 +1543,12 @@ function logWorkout() {
   sections.forEach(sec=>{
     (exercises[sec]||[]).forEach(ex=>{
       const d=getDraft(ex);
-      const hasReps=d.sets.some(s=>parseFloat(s.r)>0);
+      const workSets=d.sets.filter(s=>!s.warm);   // warm-ups excluded from the log
+      const hasReps=workSets.some(s=>parseFloat(s.r)>0);
       if(!hasReps) return;
       hasAny=true;
       const bw=settings.bw||0;
-      const sets=d.sets.map(({w,r,done})=>({w:parseFloat(w)||0,r:parseFloat(r)||0,done}));
+      const sets=workSets.map(({w,r,done})=>({w:parseFloat(w)||0,r:parseFloat(r)||0,done}));
       let vol=0,maxOrm=0,totalReps=0,maxReps=0;
       sets.forEach(({w,r})=>{
         const rv=r||0, ew=w>0?w:(bw>0?bw:0);
@@ -1350,9 +1563,12 @@ function logWorkout() {
     });
   });
   if(!hasAny){showToast('Enter some reps first');return;}
-  sessions.unshift({id:Date.now(),date:workoutDate,exercises:rows,totalVol:totVol,prs:newPRs});
+  const progMsgs = applyProgression();
+  const programTag = workoutProgram
+    ? {name:((programs||[]).find(p=>p.id===workoutProgram.programId)||{}).name, day:workoutProgram.dayName} : null;
+  sessions.unshift({id:Date.now(),date:workoutDate,exercises:rows,totalVol:totVol,prs:newPRs,unit:U(),program:programTag});
   saveAll();
-  showSessionSummary(rows, newPRs, totVol);
+  showSessionSummary(rows, newPRs, totVol, progMsgs);
   // Backup reminder
   setTimeout(()=>{
     const last = localStorage.getItem('wt_last_backup');
@@ -1390,7 +1606,7 @@ function renderHistory(){
         return `<div class="sess-ex">
           <div class="sess-ex-name">${e.ex}</div>
           <div class="sess-ex-sets">${setsStr}</div>
-          ${e.orm>0?`<div class="sess-ex-val" style="color:${col}">${e.orm} lbs 1RM</div>`:e.maxReps>0?`<div class="sess-ex-val" style="color:${col}">${e.maxReps} reps max</div>`:''}
+          ${e.orm>0?`<div class="sess-ex-val" style="color:${col}">${e.orm} ${s.unit||'lb'} 1RM</div>`:e.maxReps>0?`<div class="sess-ex-val" style="color:${col}">${e.maxReps} reps max</div>`:''}
           ${isPR?'<div class="sess-ex-pr">PR</div>':''}
         </div>`;
       }).join('');
@@ -1398,11 +1614,12 @@ function renderHistory(){
       html+=`<div class="sess-card" id="sc-${s.id}">
         <div class="sess-hdr" onclick="toggleSess(${s.id})">
           <div class="sess-date">${ds}</div>
-          ${s.totalVol>0?`<div class="sess-vol-tag">${s.totalVol.toLocaleString()} lbs</div>`:''}
+          ${s.totalVol>0?`<div class="sess-vol-tag">${s.totalVol.toLocaleString()} ${s.unit||'lb'}</div>`:''}
           ${prc?`<div class="sess-pr-tag">${prc}PR⚡</div>`:''}
           <div class="sess-chevron">▾</div>
         </div>
         <div class="sess-body">
+          ${s.program&&s.program.name?`<div class="sess-notes" style="color:var(--purple);font-style:normal">📚 ${s.program.name}${s.program.day?' · '+s.program.day:''}</div>`:''}
           ${notes?`<div class="sess-notes">${notes}</div>`:''}
           ${exRows}
           <div class="sess-footer">
@@ -1496,10 +1713,10 @@ function renderProgDetail(ex){
   det.innerHTML=`<div class="prog-detail">
     <div class="prog-stats">
       <div class="stat-box"><div class="stat-lbl">${isBW?'Best Reps':'All-Time PR'}</div>
-        <div class="stat-val gold">${isBW?(prReps?prReps+' reps':'—'):(pr?pr.toFixed(1)+' lbs':'—')}</div></div>
+        <div class="stat-val gold">${isBW?(prReps?prReps+' reps':'—'):(pr?pr.toFixed(1)+' '+U():'—')}</div></div>
       <div class="stat-box"><div class="stat-lbl">Sessions</div><div class="stat-val">${pts.length}</div></div>
       ${!isBW&&trend!==null?`
-      <div class="stat-box"><div class="stat-lbl">Last 1RM</div><div class="stat-val">${lastOrm.toFixed(1)} lbs</div></div>
+      <div class="stat-box"><div class="stat-lbl">Last 1RM</div><div class="stat-val">${lastOrm.toFixed(1)} ${U()}</div></div>
       <div class="stat-box"><div class="stat-lbl">Trend</div>
         <div class="stat-val ${parseFloat(trend)>=0?'green':''}">${parseFloat(trend)>=0?'+':''}${trend}%</div></div>`:''}
     </div>
@@ -1525,9 +1742,9 @@ function renderChart(col, ormPts, volPts, repPts, weekPts, isBW){
   if(!area) return;
   let pts, title, unit;
   if(isBW){ pts=repPts; title='Max Reps per Session'; unit='reps'; }
-  else if(progChartMode==='1rm'){ pts=ormPts; title='Estimated 1RM'; unit='lbs'; }
-  else if(progChartMode==='vol'){ pts=volPts; title='Session Volume'; unit='lbs'; }
-  else { pts=weekPts; title='Weekly Volume'; unit='lbs'; }
+  else if(progChartMode==='1rm'){ pts=ormPts; title='Estimated 1RM'; unit=U(); }
+  else if(progChartMode==='vol'){ pts=volPts; title='Session Volume'; unit=U(); }
+  else { pts=weekPts; title='Weekly Volume'; unit=U(); }
   if(titleEl) titleEl.textContent=title;
   drawChart(area, pts, col, unit);
 }
@@ -1702,33 +1919,37 @@ function clearAllData(){
 // PLATE CALCULATOR
 // ════════════════════════════════════════════════════════════════
 function showPlateCalc(){
-  document.getElementById('bar-lbl').textContent=`Bar weight: ${settings.bar||45} lbs`;
+  document.getElementById('bar-lbl').textContent=`Bar weight: ${settings.bar||UNIT_DEFAULTS[U()].bar} ${U()}`;
   document.getElementById('plate-target').value='';
+  document.getElementById('plate-target').placeholder=`Target weight (${U()})`;
   document.getElementById('plate-result').innerHTML='';
   openModal('plate');
 }
 function calcPlates(){
   const target=parseFloat(document.getElementById('plate-target').value)||0;
-  const bar=settings.bar||45;
+  const bar=settings.bar||UNIT_DEFAULTS[U()].bar;
   const res=document.getElementById('plate-result');
   if(target<=bar){res.innerHTML=`<div class="plate-none">${target>0?'Below bar weight — just the bar!':'Enter a target weight'}</div>`;return;}
   const perSide=(target-bar)/2;
-  const plateWeights=[45,35,25,10,5,2.5];
+  const plateWeights=[...(settings.plates||UNIT_DEFAULTS[U()].plates)].sort((a,b)=>b-a);
   let rem=perSide;
   const plates=[];
   plateWeights.forEach(p=>{const n=Math.floor(rem/p+.001);if(n>0){plates.push({w:p,n});rem-=p*n;}});
-  rem=Math.round(rem*10)/10;
+  rem=Math.round(rem*100)/100;
+  // Disk sizes scale by the plate's rank (biggest = largest disk).
+  const maxP=plateWeights[0]||1;
+  const sizeFor=w=>Math.round(28+24*Math.sqrt(w/maxP));
   let html=`<div class="plates-row">`;
   plates.forEach(({w,n})=>{
     const pc=PLATE_COLORS[w]||{bg:'#555',fg:'#fff'};
-    const sz=w===45?52:w===35?48:w===25?44:w===10?36:w===5?32:28;
+    const sz=sizeFor(w);
     for(let i=0;i<n;i++) html+=`<div class="plate-disk" style="width:${sz}px;height:${sz}px;background:${pc.bg};color:${pc.fg};border-color:${pc.bg};">${w}</div> `;
   });
   html+='</div>';
-  if(plates.length===0) html=`<div class="plate-none">Just the bar (${bar} lbs)</div>`;
-  if(rem>0) html+=`<div class="plate-remaining">Remainder: ${rem} lbs — use smaller plates or microplates</div>`;
+  if(plates.length===0) html=`<div class="plate-none">Just the bar (${bar} ${U()})</div>`;
+  if(rem>0) html+=`<div class="plate-remaining">Remainder: ${rem} ${U()} — not loadable with your plates</div>`;
   html+=`<div style="font-size:12px;color:var(--muted);padding-top:8px">
-    ${plates.map(({w,n})=>`${n}×${w}`).join(' + ')} per side = ${(target-rem).toFixed(1)} lbs total
+    ${plates.map(({w,n})=>`${n}×${w}`).join(' + ')} per side = ${(target-rem*2).toFixed(1)} ${U()} total
   </div>`;
   res.innerHTML=html;
 }
@@ -1780,35 +2001,259 @@ function deleteTemplate(id){
 }
 
 // ════════════════════════════════════════════════════════════════
+// PROGRAMS  (structured weeks/days · prescribed sets · progression)
+// ════════════════════════════════════════════════════════════════
+function currentProgram(){ return programState ? (programs||[]).find(p=>p.id===programState.programId) : null; }
+function schemeLabel(sc){ return `${sc.sets}×${sc.reps}${sc.amrap?'+':''}`; }
+
+// Make sure a program's exercise exists in the section list so it shows up
+// everywhere (log, history, progress). Adds it to the program's home section.
+function ensureExercise(ex, section){
+  if(sections.some(s=>(exercises[s]||[]).includes(ex))) return;
+  let sec = sections.includes(section) ? section : sections[0];
+  if(!sec){ sec='Workout'; sections.push(sec); exercises[sec]=[]; }
+  if(!exercises[sec]) exercises[sec]=[];
+  exercises[sec].push(ex);
+}
+
+function showPrograms(){ renderProgramsModal(); openModal('programs'); }
+
+function renderProgramsModal(){
+  const body=document.getElementById('prog-modal-body');
+  const active=currentProgram();
+  let html='';
+  if(active){
+    const di=programState.dayIndex||0;
+    const day=active.days[di];
+    html+=`<div class="prog-card on">
+      <div class="prog-info">
+        <div class="prog-name-lbl">${active.name} <span style="color:var(--purple)">· active</span></div>
+        <div class="prog-day-preview">Next up: ${day.name} — ${day.exercises.map(e=>e.ex).join(', ')}</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin:6px 0 16px">
+      <button class="prog-act-btn" style="flex:1" onclick="renderProgramSetup('${active.id}')">Edit weights</button>
+      <button class="prog-act-btn ghost" style="flex:1" onclick="deactivateProgram()">Stop program</button>
+    </div>
+    <div class="prog-day-preview" style="padding-bottom:8px">Jump to a day:</div>
+    <div class="prog-list">${active.days.map((d,i)=>
+      `<div class="prog-card ${i===di?'on':''}">
+        <div class="prog-info"><div class="prog-name-lbl">${d.name}</div>
+          <div class="prog-day-preview">${d.exercises.map(e=>e.ex+' '+schemeLabel(e.scheme)).join(' · ')}</div></div>
+        <button class="prog-act-btn ${i===di?'':'ghost'}" onclick="setProgramDay(${i})">${i===di?'Next':'Set'}</button>
+      </div>`).join('')}</div>`;
+  }
+  html+=`<div class="prog-day-preview" style="padding:${active?'16px':'0'} 0 8px">${active?'Switch to another program:':'Pick a program to follow:'}</div>`;
+  html+='<div class="prog-list">';
+  (programs||[]).forEach(p=>{
+    if(active && p.id===active.id) return;
+    html+=`<div class="prog-card">
+      <div class="prog-info">
+        <div class="prog-name-lbl">${p.name}${p.builtin?'':' <span style="color:var(--muted)">· custom</span>'}</div>
+        <div class="prog-day-preview">${p.days.length} day rotation · ${p.days.map(d=>d.name).join(', ')}</div>
+      </div>
+      <button class="prog-act-btn" onclick="activateProgram('${p.id}')">Use</button>
+    </div>`;
+  });
+  html+='</div>';
+  body.innerHTML=html;
+}
+
+// Activate → seed exMeta from the program's starting weights, then confirm weights.
+function activateProgram(id){
+  const p=(programs||[]).find(p=>p.id===id); if(!p) return;
+  programState={programId:id,dayIndex:0};
+  p.days.forEach(day=>day.exercises.forEach(de=>{
+    ensureExercise(de.ex, p.section);
+    if(!exMeta[de.ex]){
+      exMeta[de.ex]={weight:(de.start&&de.start[U()])||0, inc:(de.inc&&de.inc[U()])||minStep(), fails:0};
+    }
+  }));
+  saveAll();
+  renderProgramSetup(id);
+}
+
+function renderProgramSetup(id){
+  const p=(programs||[]).find(p=>p.id===id); if(!p) return;
+  const body=document.getElementById('prog-modal-body');
+  // Unique exercises across the program's days.
+  const seen=new Set(); const list=[];
+  p.days.forEach(day=>day.exercises.forEach(de=>{ if(!seen.has(de.ex)){ seen.add(de.ex); list.push(de);} }));
+  let html=`<div class="prog-day-preview" style="padding-bottom:10px">
+    Set your starting working weight for each lift (${U()}). The app prescribes these
+    each session and adjusts them automatically as you progress.</div>`;
+  list.forEach(de=>{
+    const m=exMeta[de.ex]||{weight:0,inc:minStep()};
+    html+=`<div class="prog-setup-row">
+      <div class="prog-setup-name">${de.ex}<div style="font-size:10px;color:var(--muted);font-weight:400">${schemeLabel(de.scheme)} · +${m.inc||minStep()} ${U()}/session</div></div>
+      <input class="prog-setup-input" type="number" inputmode="decimal" id="pw-${esc(de.ex)}" value="${m.weight||''}" placeholder="${U()}">
+    </div>`;
+  });
+  html+=`<div style="padding-top:16px"><button class="tmpl-save-btn" onclick="saveProgramSetup('${id}')">Save & Start Program</button></div>`;
+  body.innerHTML=html;
+}
+
+function saveProgramSetup(id){
+  const p=(programs||[]).find(p=>p.id===id); if(!p) return;
+  const seen=new Set();
+  p.days.forEach(day=>day.exercises.forEach(de=>{
+    if(seen.has(de.ex)) return; seen.add(de.ex);
+    const inp=document.getElementById('pw-'+esc(de.ex));
+    const w=inp?parseFloat(inp.value)||0:0;
+    exMeta[de.ex]=exMeta[de.ex]||{inc:(de.inc&&de.inc[U()])||minStep(),fails:0};
+    exMeta[de.ex].weight=w;
+  }));
+  saveAll(); closeModal('programs');
+  if(!workoutPlan) buildLog();
+  showToast('Program ready — start your next day from the Log tab');
+}
+
+function deactivateProgram(){
+  if(!confirm('Stop following this program? Your logged history and weights are kept.')) return;
+  programState=null; saveAll(); renderProgramsModal();
+  if(!workoutPlan) buildLog();
+}
+
+function setProgramDay(i){
+  if(!programState) return;
+  programState.dayIndex=i; saveAll(); renderProgramsModal();
+  if(!workoutPlan) buildLog();
+}
+
+// Pre-fill an exercise's draft with its prescribed sets (target weight + reps).
+function prescribeDraft(ex, scheme){
+  const m=exMeta[ex]||{weight:0};
+  const w=m.weight>0?m.weight:'';
+  draft[ex]={
+    notes:'', prescribed:true, scheme,
+    sets:Array.from({length:scheme.sets},(_,i)=>({
+      w:w, r:scheme.reps, done:false,
+      tw:(m.weight>0?m.weight:0), tr:scheme.reps,
+      amrap:!!(scheme.amrap && i===scheme.sets-1)
+    }))
+  };
+}
+
+// Start the current program day → build the plan, prescribe every lift.
+function startProgramDay(){
+  const p=currentProgram(); if(!p){ showToast('No active program'); return; }
+  const di=programState.dayIndex||0;
+  const day=p.days[di];
+  const needSetup=day.exercises.some(de=>!exMeta[de.ex]||!(exMeta[de.ex].weight>0));
+  day.exercises.forEach(de=>{
+    ensureExercise(de.ex, p.section);
+    if(!exMeta[de.ex]) exMeta[de.ex]={weight:(de.start&&de.start[U()])||0,inc:(de.inc&&de.inc[U()])||minStep(),fails:0};
+    prescribeDraft(de.ex, de.scheme);
+  });
+  workoutPlan=day.exercises.map(de=>de.ex);
+  workoutProgram={programId:p.id,dayIndex:di,dayName:day.name};
+  builderSelected=new Set(workoutPlan);
+  saveDraft(); saveAll();
+  buildLog();
+  if(needSetup) showToast('Tip: set starting weights via 📚 for auto-prescribed loads');
+}
+
+// After logging a program day: progress each lift and advance the rotation.
+function applyProgression(){
+  if(!workoutProgram) return [];
+  const p=(programs||[]).find(p=>p.id===workoutProgram.programId);
+  const day=p&&p.days[workoutProgram.dayIndex];
+  if(!day) return [];
+  const msgs=[];
+  day.exercises.forEach(de=>{
+    const d=draft[de.ex]; if(!d) return;
+    const m=exMeta[de.ex]||{weight:0,inc:minStep(),fails:0};
+    const workSets=d.sets.filter(s=>!s.warm);
+    const target=de.scheme.reps;
+    const hit = workSets.length>0 && workSets.every(s=>s.done && (parseFloat(s.r)||0)>=target);
+    const inc=m.inc||minStep();
+    if(hit){
+      m.weight=roundLoadable((m.weight||0)+inc); m.fails=0;
+      msgs.push({ex:de.ex, txt:`+${inc} → ${fmtW(m.weight)}`, kind:'up'});
+    } else {
+      m.fails=(m.fails||0)+1;
+      if(m.fails>=3){ m.weight=roundLoadable((m.weight||0)*0.9); m.fails=0;
+        msgs.push({ex:de.ex, txt:`deload → ${fmtW(m.weight)}`, kind:'down'}); }
+      else msgs.push({ex:de.ex, txt:`hold ${fmtW(m.weight)} · fail ${m.fails}/3`, kind:'hold'});
+    }
+    exMeta[de.ex]=m;
+  });
+  // Advance to the next day in the rotation.
+  programState.dayIndex=(workoutProgram.dayIndex+1)%p.days.length;
+  return msgs;
+}
+
+// ════════════════════════════════════════════════════════════════
 // SETTINGS
 // ════════════════════════════════════════════════════════════════
+// Working copy of the unit while the modal is open (applied on Save).
+let settingsUnit = 'lb';
 function showSettings(){
+  settingsUnit = U();
+  renderUnitSeg();
   document.getElementById('set-bw').value=settings.bw||'';
-  document.getElementById('set-bar').value=settings.bar||45;
+  document.getElementById('set-bar').value=settings.bar||UNIT_DEFAULTS[settingsUnit].bar;
+  document.getElementById('set-bw').placeholder=settingsUnit;
+  document.getElementById('set-bar').placeholder=settingsUnit;
+  renderPlateInv();
   const seg=document.getElementById('rest-seg');
   seg.innerHTML=[60,90,120,180].map(s=>
     `<button class="seg-opt ${(settings.rest||90)===s?'on':''}" onclick="setRestSeg(${s})">${s<120?s+'s':(s/60)+'m'}</button>`
   ).join('');
   openModal('settings');
 }
+function renderUnitSeg(){
+  document.getElementById('unit-seg').innerHTML=['lb','kg'].map(u=>
+    `<button class="seg-opt ${settingsUnit===u?'on':''}" onclick="setUnitSeg('${u}')">${u}</button>`).join('');
+}
+function setUnitSeg(u){
+  if(settingsUnit===u) return;
+  settingsUnit=u;
+  // Reset bar + plate inventory to that unit's sensible defaults.
+  settings._pendingPlates=[...UNIT_DEFAULTS[u].plates];
+  document.getElementById('set-bar').value=UNIT_DEFAULTS[u].bar;
+  document.getElementById('set-bw').placeholder=u;
+  document.getElementById('set-bar').placeholder=u;
+  renderUnitSeg();
+  renderPlateInv();
+}
+function renderPlateInv(){
+  const el=document.getElementById('plate-inv');
+  const own=settings._pendingPlates || settings.plates || UNIT_DEFAULTS[settingsUnit].plates;
+  // Show the union of common denominations for this unit plus anything already owned.
+  const common = settingsUnit==='kg' ? [25,20,15,10,5,2.5,1.25,0.5] : [45,35,25,15,10,5,2.5,1.25];
+  const all=[...new Set([...common,...own])].sort((a,b)=>b-a);
+  el.innerHTML=all.map(p=>
+    `<button class="plate-chip ${own.includes(p)?'on':''}" onclick="togglePlate(${p})">${p}</button>`).join('');
+}
+function togglePlate(p){
+  let own=settings._pendingPlates ? [...settings._pendingPlates] : [...(settings.plates||UNIT_DEFAULTS[settingsUnit].plates)];
+  if(own.includes(p)) own=own.filter(x=>x!==p); else own.push(p);
+  if(!own.length){ showToast('Keep at least one plate'); return; }
+  settings._pendingPlates=own;
+  renderPlateInv();
+}
 function setRestSeg(s){
   settings.rest=s;
-  document.querySelectorAll('.seg-opt').forEach(b=>{
-    const v=parseInt(b.textContent)*60||parseInt(b.textContent);
-    const sec=b.textContent==='1s'?1:b.textContent.endsWith('m')?parseInt(b.textContent)*60:parseInt(b.textContent);
-    b.classList.toggle('on',[60,90,120,180].find(x=>x===s)===s&&b.textContent===(s<120?s+'s':(s/60)+'m'));
+  document.querySelectorAll('#rest-seg .seg-opt').forEach(b=>{
+    b.classList.toggle('on',b.textContent===(s<120?s+'s':(s/60)+'m'));
   });
 }
 function saveSettings(){
+  settings.unit=settingsUnit;
   settings.bw=parseFloat(document.getElementById('set-bw').value)||0;
-  settings.bar=parseFloat(document.getElementById('set-bar').value)||45;
-  saveAll(); closeModal('settings'); calcAll(); showToast('Settings saved');
+  settings.bar=parseFloat(document.getElementById('set-bar').value)||UNIT_DEFAULTS[settingsUnit].bar;
+  if(settings._pendingPlates){ settings.plates=settings._pendingPlates.sort((a,b)=>b-a); delete settings._pendingPlates; }
+  if(!settings.plates||!settings.plates.length) settings.plates=[...UNIT_DEFAULTS[settingsUnit].plates];
+  saveAll(); closeModal('settings');
+  if(workoutPlan) buildLog(); else calcAll();
+  showToast('Settings saved');
 }
 
 // ── Backup & Restore ──────────────────────────────────────────
 function backupData() {
   const data = {
-    version: 1,
+    version: 2,
     backed_up: new Date().toISOString(),
     wt_secs:  sections,
     wt_exs:   exercises,
@@ -1816,7 +2261,10 @@ function backupData() {
     wt_prs:   prs,
     wt_draft: draft,
     wt_tmpls: templates,
-    wt_set:   settings
+    wt_set:   settings,
+    wt_programs: (programs||[]).filter(p=>!p.builtin),
+    wt_progstate: programState,
+    wt_exmeta: exMeta
   };
   const json = JSON.stringify(data, null, 2);
   const a = document.createElement('a');
@@ -1844,6 +2292,11 @@ function onRestoreFile(input) {
       draft     = data.wt_draft || {};
       templates = data.wt_tmpls || [];
       settings  = data.wt_set   || settings;
+      if(!settings.unit) settings.unit='lb';
+      if(!settings.plates) settings.plates=[...UNIT_DEFAULTS[U()].plates];
+      exMeta       = data.wt_exmeta || {};
+      programState = data.wt_progstate || null;
+      programs     = [...JSON.parse(JSON.stringify(BUILTIN_PROGRAMS)), ...((data.wt_programs)||[])];
       saveAll(); saveDraft();
       buildLog(); renderExercises();
       showToast(`Restored ${sessions.length} sessions ✓`);
@@ -1953,18 +2406,18 @@ function renderStreakBar() {
 
 
 // ── Session Summary ────────────────────────────────────────────
-function showSessionSummary(rows, newPRs, totalVol) {
+function showSessionSummary(rows, newPRs, totalVol, progMsgs) {
   const ov = document.getElementById('summary-overlay');
   const d = new Date(workoutDate + 'T12:00:00');
   document.getElementById('sum-date').textContent =
     d.toLocaleDateString('en-US', {weekday:'long', month:'long', day:'numeric', year:'numeric'});
   document.getElementById('sum-vol').textContent =
-    totalVol > 0 ? totalVol.toLocaleString() + ' lbs' : rows.length + ' exercises';
+    totalVol > 0 ? totalVol.toLocaleString() + ' ' + U() : rows.length + ' exercises';
 
   const { streak, thisWeek } = calcStreak();
   document.getElementById('sum-streak').innerHTML =
     `<div class="summary-streak-item"><div class="summary-streak-val">${rows.length}</div><div class="summary-streak-lbl">Exercises</div></div>` +
-    (totalVol > 0 ? `<div class="summary-streak-item"><div class="summary-streak-val" style="color:var(--gold)">${totalVol.toLocaleString()}</div><div class="summary-streak-lbl">Lbs Lifted</div></div>` : '') +
+    (totalVol > 0 ? `<div class="summary-streak-item"><div class="summary-streak-val" style="color:var(--gold)">${totalVol.toLocaleString()}</div><div class="summary-streak-lbl">${U()==='kg'?'Kg':'Lbs'} Lifted</div></div>` : '') +
     (streak > 0 ? `<div class="summary-streak-item"><div class="summary-streak-val">🔥${streak}</div><div class="summary-streak-lbl">Day Streak</div></div>` : '') +
     `<div class="summary-streak-item"><div class="summary-streak-val">${thisWeek}</div><div class="summary-streak-lbl">This Week</div></div>`;
 
@@ -1975,11 +2428,24 @@ function showSessionSummary(rows, newPRs, totalVol) {
         const r = rows.find(r => r.ex === ex);
         return `<div class="summary-pr-item">
           <div class="summary-pr-ex">${ex}</div>
-          <div class="summary-pr-val">${r && r.orm > 0 ? r.orm + ' lbs' : r && r.maxReps ? r.maxReps + ' reps' : '⚡'}</div>
+          <div class="summary-pr-val">${r && r.orm > 0 ? r.orm + ' ' + U() : r && r.maxReps ? r.maxReps + ' reps' : '⚡'}</div>
         </div>`;
       }).join('');
   } else {
     prsEl.innerHTML = '';
+  }
+
+  const progEl = document.getElementById('sum-progression');
+  if (progMsgs && progMsgs.length) {
+    const icon = k => k==='up'?'⬆':k==='down'?'⬇':'→';
+    const col  = k => k==='up'?'var(--lower)':k==='down'?'var(--core)':'var(--muted)';
+    progEl.innerHTML = `<div class="summary-pr-title" style="color:var(--purple)">📚 Next Session Weights</div>` +
+      progMsgs.map(m=>`<div class="summary-pr-item" style="background:rgba(155,114,207,.08);border-color:rgba(155,114,207,.2)">
+        <div class="summary-pr-ex">${m.ex}</div>
+        <div class="summary-pr-val" style="color:${col(m.kind)}">${icon(m.kind)} ${m.txt}</div>
+      </div>`).join('');
+  } else {
+    progEl.innerHTML = '';
   }
 
   document.getElementById('sum-exlist').innerHTML =
@@ -2002,6 +2468,7 @@ function dismissSummary() {
   document.getElementById('summary-overlay').classList.remove('active');
   draft = {}; saveDraft();
   workoutPlan = null;
+  workoutProgram = null;
   builderSelected = new Set();
   activeSection = '';
   buildLog();
@@ -2053,7 +2520,7 @@ function updatePlanBanner() {
 // ── Card Collapse ──────────────────────────────────────────────
 function checkCardDone(ex) {
   const d = getDraft(ex);
-  const filled = d.sets.filter(s => parseFloat(s.r) > 0 || parseFloat(s.w) > 0);
+  const filled = d.sets.filter(s => !s.warm && (parseFloat(s.r) > 0 || parseFloat(s.w) > 0));
   if (!filled.length) return;
   const allDone = filled.every(s => s.done);
   const ke = esc(ex);
@@ -2071,7 +2538,7 @@ function updateCardSummary(ex) {
   const sumEl = document.getElementById('esum-' + ke);
   if (!sumEl) return;
   const d = getDraft(ex);
-  const sets = d.sets.filter(s => parseFloat(s.r) > 0);
+  const sets = d.sets.filter(s => !s.warm && parseFloat(s.r) > 0);
   const setsStr = sets.map(s => s.w > 0 ? `${s.w}×${s.r}` : `BW×${s.r}`).join('  ');
   const volEl = document.getElementById('evol-' + ke);
   const vol = volEl ? volEl.textContent : '';
