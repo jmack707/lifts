@@ -467,7 +467,13 @@ body.wip .page.active{padding-bottom:60px;}
   border-radius:10px;color:var(--text);font-family:'DM Mono',monospace;font-size:22px;
   padding:12px 14px;text-align:center;outline:none;}
 .plate-big-input:focus{border-color:var(--border2);}
-.bar-lbl{font-size:12px;color:var(--muted);text-align:center;margin-bottom:12px;}
+.bar-select-lbl{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:7px;}
+.bar-select{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:16px;}
+.bar-chip{padding:8px 13px;border-radius:9px;font-family:'DM Mono',monospace;font-size:13px;font-weight:600;
+  background:var(--s2);border:1px solid var(--border);color:var(--muted);cursor:pointer;}
+.bar-chip.on{background:var(--core);border-color:var(--core);color:#fff;}
+.bar-chip:active{background:var(--s3);}
 .plate-side{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
   color:var(--muted);margin-bottom:10px;}
 .plates-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:16px;}
@@ -961,7 +967,8 @@ margin-bottom:10px;padding:14px;
       <input class="plate-big-input" type="number" inputmode="decimal" id="plate-target"
         placeholder="Target weight" oninput="calcPlates()">
     </div>
-    <div class="bar-lbl" id="bar-lbl"></div>
+    <div class="bar-select-lbl">Bar</div>
+    <div class="bar-select" id="bar-select"></div>
     <div class="plate-side">Per Side</div>
     <div id="plate-result"></div>
   </div>
@@ -2610,8 +2617,29 @@ function clearAllData(){
 // ════════════════════════════════════════════════════════════════
 // PLATE CALCULATOR
 // ════════════════════════════════════════════════════════════════
+// The bar weight the calculator is currently using (chosen per-calculation, so
+// you can switch to a lighter bar or "No bar" without touching your settings).
+let plateCalcBar = null;
+// Bar choices: your configured bar + common lighter bars + a plate-only option.
+function barOptions(){
+  const def = settings.bar || UNIT_DEFAULTS[U()].bar;
+  const commons = U()==='kg' ? [20,15,10] : [45,35,15];
+  const list = [...new Set([def, ...commons])].filter(b=>b>0).sort((a,b)=>b-a);
+  list.push(0);   // 0 = No bar (dumbbells, machines, plate-loaded — count the full weight)
+  return list;
+}
+function renderBarChips(){
+  const wrap=document.getElementById('bar-select');
+  wrap.innerHTML = barOptions().map(b=>{
+    const on = b===plateCalcBar;
+    const lbl = b===0 ? 'No bar' : `${b} ${U()}`;
+    return `<button class="bar-chip ${on?'on':''}" onclick="setPlateCalcBar(${b})">${lbl}</button>`;
+  }).join('');
+}
+function setPlateCalcBar(b){ plateCalcBar=b; renderBarChips(); calcPlates(); }
 function showPlateCalc(prefill){
-  document.getElementById('bar-lbl').textContent=`Bar weight: ${settings.bar||UNIT_DEFAULTS[U()].bar} ${U()}`;
+  plateCalcBar = settings.bar || UNIT_DEFAULTS[U()].bar;   // default to your normal bar
+  renderBarChips();
   document.getElementById('plate-target').value = prefill>0 ? prefill : '';
   document.getElementById('plate-target').placeholder=`Target weight (${U()})`;
   document.getElementById('plate-result').innerHTML='';
@@ -2644,9 +2672,11 @@ function onTargetInput(ex, el){
 }
 function calcPlates(){
   const target=parseFloat(document.getElementById('plate-target').value)||0;
-  const bar=settings.bar||UNIT_DEFAULTS[U()].bar;
+  const bar = plateCalcBar!=null ? plateCalcBar : (settings.bar||UNIT_DEFAULTS[U()].bar);
+  const noBar = bar<=0;
   const res=document.getElementById('plate-result');
-  if(target<=bar){res.innerHTML=`<div class="plate-none">${target>0?'Below bar weight — just the bar!':'Enter a target weight'}</div>`;return;}
+  if(target<=0){ res.innerHTML=`<div class="plate-none">Enter a target weight</div>`; return; }
+  if(!noBar && target<bar){ res.innerHTML=`<div class="plate-none">Below bar weight — just the bar!</div>`; return; }
   const perSide=(target-bar)/2;
   const plateWeights=[...(settings.plates||UNIT_DEFAULTS[U()].plates)].sort((a,b)=>b-a);
   let rem=perSide;
@@ -2663,10 +2693,12 @@ function calcPlates(){
     for(let i=0;i<n;i++) html+=`<div class="plate-disk" style="width:${sz}px;height:${sz}px;background:${pc.bg};color:${pc.fg};border-color:${pc.bg};">${w}</div> `;
   });
   html+='</div>';
-  if(plates.length===0) html=`<div class="plate-none">Just the bar (${bar} ${U()})</div>`;
+  if(plates.length===0) html=`<div class="plate-none">${noBar?'Nothing to load':`Just the bar (${bar} ${U()})`}</div>`;
   if(rem>0) html+=`<div class="plate-remaining">Remainder: ${rem} ${U()} — not loadable with your plates</div>`;
+  const loaded=(target-rem*2).toFixed(1);
   html+=`<div style="font-size:12px;color:var(--muted);padding-top:8px">
-    ${plates.map(({w,n})=>`${n}×${w}`).join(' + ')} per side = ${(target-rem*2).toFixed(1)} ${U()} total
+    ${plates.length?plates.map(({w,n})=>`${n}×${w}`).join(' + ')+' per side = ':''}${loaded} ${U()} total
+    <span style="opacity:.7">${noBar?'(no bar)':`(incl. ${bar} ${U()} bar)`}</span>
   </div>`;
   res.innerHTML=html;
 }
