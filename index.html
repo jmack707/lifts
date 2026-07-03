@@ -353,6 +353,8 @@ body.wip .page.active{padding-bottom:60px;}
 .exinfo-tag.primary{background:rgba(224,82,82,.15);color:var(--core);}
 .exinfo-tag.secondary{background:var(--s3);color:var(--muted);}
 .exinfo-tag.equip{background:rgba(74,158,224,.14);color:var(--upper);}
+.exinfo-imgs{display:flex;gap:6px;margin:12px 0 2px;}
+.exinfo-img{width:calc(50% - 3px);border-radius:10px;background:var(--s2);object-fit:cover;aspect-ratio:4/3;display:block;}
 .exinfo-steps{margin:14px 0 4px;padding:0;list-style:none;counter-reset:step;}
 .exinfo-steps li{position:relative;padding:8px 0 8px 34px;border-bottom:1px solid var(--border2);
   font-size:13px;line-height:1.5;color:var(--text);counter-increment:step;}
@@ -916,7 +918,7 @@ margin-bottom:10px;padding:14px;
     <input class="tmpl-name-input" id="lib-search" placeholder="Search exercises…" oninput="renderLibrary()" style="margin-bottom:10px">
     <div class="lib-filters" id="lib-filters"></div>
     <div id="lib-results"></div>
-    <div class="lib-credit">Exercise data from <b>ExerciseDB</b>, via the <b>hasaneyldrm/exercises-dataset</b> project. Review ExerciseDB's terms before reuse.</div>
+    <div class="lib-credit">Exercise data &amp; images from <b>free-exercise-db</b> (yuhonas) — public domain (Unlicense), originally from Everkinetic.</div>
   </div>
 </div>
 
@@ -2249,7 +2251,7 @@ function drawChart(container, points, color, unit){
 function renderExercises(){
   const body=document.getElementById('ex-body');
   let html='<div class="ex-mgmt">';
-  html+=`<button class="lib-launch" onclick="showLibrary()">🔍 Browse exercise library (1,300+)</button>`;
+  html+=`<button class="lib-launch" onclick="showLibrary()">🔍 Browse exercise library (800+)</button>`;
   html+=`<div class="add-sec-row">
     <input class="add-input" id="new-sec-inp" placeholder="New section name…" maxlength="30">
     <button class="add-confirm" onclick="addSection()">+ Add</button>
@@ -2805,9 +2807,10 @@ function applyProgression(){
 // ════════════════════════════════════════════════════════════════
 let EXLIB=null, HOWTO=null, libBP='', libShown=[];
 const LIB_MAX=60;
-const BP_SECTION={ waist:'Core', cardio:'Core', chest:'Upper Body', back:'Upper Body',
-  'upper arms':'Upper Body', 'lower arms':'Upper Body', shoulders:'Upper Body', neck:'Upper Body',
-  'upper legs':'Lower Body', 'lower legs':'Lower Body' };
+const BP_SECTION={ Core:'Core', Chest:'Upper Body', Back:'Upper Body', Shoulders:'Upper Body',
+  Arms:'Upper Body', Legs:'Lower Body', Other:'Upper Body' };
+// Exercise demo images (public domain) are lazy-loaded from the dataset's CDN.
+const IMG_BASE='https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/';
 function htmlEsc(s){ return String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 
 // Data files are lazy-loaded once and cached by the service worker for offline use.
@@ -2842,7 +2845,7 @@ function renderLibrary(){
   const q=(document.getElementById('lib-search').value||'').toLowerCase().trim();
   let list=EXLIB;
   if(libBP) list=list.filter(e=>e.bp===libBP);
-  if(q) list=list.filter(e=>e.n.includes(q)||e.t.includes(q)||e.eq.includes(q)||(e.s||[]).some(m=>m.includes(q)));
+  if(q) list=list.filter(e=>e.n.toLowerCase().includes(q)||(e.t||'').toLowerCase().includes(q)||(e.eq||'').toLowerCase().includes(q)||(e.s||[]).some(m=>m.toLowerCase().includes(q)));
   const total=list.length;
   libShown=list.slice(0,LIB_MAX);
   const res=document.getElementById('lib-results');
@@ -2890,19 +2893,23 @@ async function showExInfo(rec){
     ${(rec.s||[]).map(m=>`<span class="exinfo-tag secondary">${htmlEsc(m)}</span>`).join('')}
     <span class="exinfo-tag equip">🏋 ${htmlEsc(rec.eq)}</span></div>`;
   body.innerHTML=`<div class="exinfo-name">${htmlEsc(rec.n)}</div>
+    <div id="exinfo-imgs"></div>
     <div class="exinfo-muscle-lbl">Muscles worked</div>${tags}
     <div class="exinfo-muscle-lbl">How to</div>
     <div id="exinfo-how"><div class="lib-empty">Loading…</div></div>
-    <div class="lib-credit">Data from ExerciseDB, via hasaneyldrm/exercises-dataset.</div>`;
+    <div class="lib-credit">Data &amp; images from free-exercise-db (public domain). Images load when online.</div>`;
   openModal('exinfo');
   try{
     const how=await loadHowTo();
-    const steps=how[rec.n];
-    document.getElementById('exinfo-how').innerHTML = steps&&steps.length
+    const entry=how[rec.n]||{};
+    const imgs=entry.imgs||[], steps=entry.steps||[];
+    if(imgs.length) document.getElementById('exinfo-imgs').innerHTML=
+      `<div class="exinfo-imgs">${imgs.map(p=>`<img class="exinfo-img" loading="lazy" src="${IMG_BASE}${htmlEsc(p)}" onerror="this.remove()" alt="">`).join('')}</div>`;
+    document.getElementById('exinfo-how').innerHTML = steps.length
       ? `<ol class="exinfo-steps">${steps.map(s=>`<li>${htmlEsc(s)}</li>`).join('')}</ol>`
       : '<div class="lib-empty">No instructions available for this exercise.</div>';
   }catch(e){
-    document.getElementById('exinfo-how').innerHTML='<div class="lib-empty">Connect to the internet once to download instructions.</div>';
+    document.getElementById('exinfo-how').innerHTML='<div class="lib-empty">Connect to the internet once to download instructions &amp; images.</div>';
   }
 }
 
