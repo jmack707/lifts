@@ -621,6 +621,10 @@ margin-bottom:10px;padding:14px;
 .se-lbl{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);}
 .se-date{flex:1;background:var(--s2);border:1px solid var(--border);border-radius:8px;
   padding:9px 10px;color:var(--text);font-family:'DM Mono',monospace;font-size:14px;}
+.se-prefill{display:flex;gap:8px;margin-bottom:14px;}
+.se-prefill-sel{flex:1;min-width:0;background:var(--s2);border:1px solid var(--border2);border-radius:8px;
+  padding:9px 10px;color:var(--purple);font-size:13px;font-weight:700;cursor:pointer;
+  -webkit-appearance:none;appearance:none;text-overflow:ellipsis;}
 .se-empty{color:var(--muted);font-size:13px;text-align:center;padding:14px 0;}
 .se-ex{background:var(--s2);border:1px solid var(--border);border-radius:12px;padding:11px 12px;margin-bottom:11px;}
 .se-ex-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
@@ -2405,14 +2409,90 @@ function openSessEdit(title){
   renderSessEdit();
   openModal('sessedit');
 }
+// Flat list of every program day, for the "prefill from program" picker.
+function programDayList(){
+  const out=[];
+  (programs||[]).forEach(p=>{
+    if(p.weeks){ p.weeks.forEach((wk,wi)=>(wk.days||[]).forEach((day,di)=>
+      out.push({key:`${p.id}|${wi}|${di}`, prog:p.name, label:`${wk.name||'Wk '+(wi+1)} · ${day.name}`, day}))); }
+    else if(p.days){ p.days.forEach((day,di)=>
+      out.push({key:`${p.id}|-1|${di}`, prog:p.name, label:day.name, day})); }
+  });
+  return out;
+}
+// Build editable sets for one prescribed exercise (best-effort skeleton to adjust).
+function setsFromScheme(de){
+  const sc=de.scheme||{};
+  const m=exMeta[de.ex];
+  const w = m && m.weight>0 ? m.weight : ((de.start&&de.start[U()])||'');
+  const sets=[];
+  if(sc.setList){
+    sc.setList.forEach(x=> sets.push({w: sc.bw?'':(w||''), r:x.reps||'', hold:0, noload:false}));
+  } else {
+    const n = sc.sets || 3;
+    for(let i=0;i<n;i++){
+      if(sc.hold) sets.push({w:'', r:sc.hold, hold:sc.hold, noload:false});
+      else sets.push({w: sc.bw?'':(w||''), r: sc.reps||'', hold:0, noload:false});
+    }
+  }
+  return sets;
+}
+function secFor(name){ return sections.find(s=>(exercises[s]||[]).includes(name)) || sections[0] || FLAT_SECTION; }
+function sePrefillTemplate(id){
+  if(!id) return;
+  const t=templates.find(x=>x.id===id); if(!t) return;
+  (t.exercises||[]).forEach(name=>{
+    // Reuse the most recent logged numbers for this lift when we have them.
+    const last=sessions.find(s=>(s.exercises||[]).some(e=>e.ex===name));
+    const le=last && last.exercises.find(e=>e.ex===name);
+    const sets = (le && le.sets && le.sets.length)
+      ? le.sets.map(st=>({w:st.w||'', r:st.r||'', hold:st.hold||0, noload:!!st.noload}))
+      : [{w:'',r:'',hold:0,noload:false},{w:'',r:'',hold:0,noload:false},{w:'',r:'',hold:0,noload:false}];
+    sessEdit.exercises.push({ex:name, sec:secFor(name), notes:'', sets});
+  });
+  renderSessEdit();
+  showToast('Loaded template: '+t.name);
+}
+function sePrefillProgramDay(key){
+  if(!key) return;
+  const [pid,wi,di]=key.split('|');
+  const p=(programs||[]).find(x=>x.id===pid); if(!p) return;
+  const day = wi==='-1' ? (p.days||[])[+di] : (p.weeks[+wi].days||[])[+di];
+  if(!day) return;
+  (day.exercises||[]).forEach(de=>{
+    sessEdit.exercises.push({ex:de.ex, sec:secFor(de.ex), notes:'', sets:setsFromScheme(de)});
+  });
+  renderSessEdit();
+  showToast('Loaded '+day.name);
+}
 function renderSessEdit(){
   const dl=knownExerciseNames().map(n=>`<option value="${n.replace(/"/g,'&quot;')}">`).join('');
   let h=`<div class="se-daterow">
     <label class="se-lbl">Date</label>
     <input type="date" class="se-date" id="se-date" value="${sessEdit.date}" onchange="sessEdit.date=this.value">
   </div>`;
+  // Prefill from a saved template or a program day.
+  const days=programDayList();
+  if(templates.length || days.length){
+    h+=`<div class="se-prefill">`;
+    if(templates.length){
+      h+=`<select class="se-prefill-sel" onchange="sePrefillTemplate(this.value);this.value=''">
+        <option value="">＋ From template…</option>
+        ${templates.map(t=>`<option value="${t.id}">${t.name}</option>`).join('')}
+      </select>`;
+    }
+    if(days.length){
+      const groups={};
+      days.forEach(d=>{ (groups[d.prog]=groups[d.prog]||[]).push(d); });
+      h+=`<select class="se-prefill-sel" onchange="sePrefillProgramDay(this.value);this.value=''">
+        <option value="">＋ From program…</option>
+        ${Object.keys(groups).map(pn=>`<optgroup label="${pn}">${groups[pn].map(d=>`<option value="${d.key}">${d.label}</option>`).join('')}</optgroup>`).join('')}
+      </select>`;
+    }
+    h+=`</div>`;
+  }
   if(!sessEdit.exercises.length){
-    h+=`<div class="se-empty">No exercises yet — add one below.</div>`;
+    h+=`<div class="se-empty">No exercises yet — pull one from a template or program above, or add one below.</div>`;
   }
   sessEdit.exercises.forEach((e,ei)=>{
     h+=`<div class="se-ex">
