@@ -758,6 +758,10 @@ margin-bottom:10px;padding:14px;
   background:var(--s3);border:1px solid var(--border2);color:var(--text);cursor:pointer;
   display:flex;align-items:center;gap:6px;}
 .tmpl-chip:active{background:var(--s4);}
+.tmpl-chip{display:inline-flex;align-items:center;gap:8px;}
+.tmpl-chip-x{color:var(--muted2);font-size:14px;font-weight:400;padding:0 2px;}
+.tmpl-chip-x:active{color:var(--core);}
+.tmpl-save-row{display:flex;gap:7px;align-items:center;margin:6px 0 4px;}
 .start-quick{display:flex;gap:8px;margin-top:14px;}
 .start-quick-btn{flex:1;padding:11px;background:var(--s2);border:1px solid var(--border);
   border-radius:9px;color:var(--muted);font-size:13px;font-weight:700;cursor:pointer;}
@@ -989,17 +993,6 @@ margin-bottom:10px;padding:14px;
   <div class="modal-sheet" onclick="event.stopPropagation()">
     <div class="modal-handle"></div>
     <div id="exact-body"></div>
-  </div>
-</div>
-
-<!-- TEMPLATES MODAL -->
-<div class="modal-bg" id="modal-templates" onclick="closeModal('templates')">
-  <div class="modal-sheet" onclick="event.stopPropagation()">
-    <div class="modal-handle"></div>
-    <div class="modal-title">📋 Templates</div>
-    <div class="tmpl-intro">A template is a saved set of exercises for quick starts — tap one to load it into a workout.</div>
-    <div id="tmpl-list"></div>
-    <div id="tmpl-create"></div>
   </div>
 </div>
 
@@ -1505,7 +1498,8 @@ function buildLog() {
       pg.classList.remove('no-action');
       logAction.style.display = 'flex';
       logAction.innerHTML =
-        `<button class="sm-btn" onclick="closeBuilder()">‹ Back</button>`+
+        `<button class="sm-btn" onclick="closeBuilder()" title="Back">‹</button>`+
+        `<button class="sm-btn" onclick="startBuilderSave()">💾 Save</button>`+
         `<button class="log-btn" onclick="applyPlan()">START WORKOUT</button>`;
       renderBuilder();
     } else {
@@ -1719,8 +1713,7 @@ function renderDashboard(){
   }
 
   html += `<div class="dash-quick">
-    ${qa('✏️','Build custom','openBuilder()')}
-    ${qa('📋','Templates','showTemplates()')}
+    ${qa('✏️','Build / Templates','openBuilder()')}
     ${qa('📚','Programs','showPrograms()')}
     ${qa('🔢','Plates','showPlateCalc()')}</div>`;
 
@@ -1745,19 +1738,32 @@ function renderDashboard(){
   body.innerHTML = html;
 }
 
-// ── Exercise picker (reached via "Build custom") ──────────────
+// ── Build a Workout — the single space for picking, starting, and templates ──
+let builderSaving = false;
 function renderBuilder(){
   const body = document.getElementById('log-body');
   if(!builderSelected) builderSelected = new Set();
   let html = '<div class="start-screen">';
   html += '<div class="start-title">Build a Workout</div>';
-  html += '<div class="start-sub">Tap the exercises you\'re doing today, then hit Start.</div>';
+  html += '<div class="start-sub">Pick exercises, then Start — or 💾 Save the selection as a template.</div>';
 
+  // Inline "name this template" row (shown when 💾 Save is tapped).
+  if(builderSaving){
+    html += `<div class="tmpl-save-row">
+      <input class="add-input" id="builder-tmpl-name" placeholder="Template name…" maxlength="40"
+        onkeydown="if(event.key==='Enter')confirmBuilderSave();if(event.key==='Escape')cancelBuilderSave()">
+      <button class="add-confirm" onclick="confirmBuilderSave()">Save</button>
+      <button class="tmpl-del" onclick="cancelBuilderSave()">✕</button>
+    </div>`;
+  }
+
+  // Saved templates as tap-to-load chips, each with a ✕ to delete.
   if(templates.length){
-    html += '<div class="start-sec-lbl">⚡ Quick start from a template</div>';
+    html += '<div class="start-sec-lbl">⚡ Your templates · tap to load</div>';
     html += '<div class="tmpl-chips">';
     templates.forEach(t=>{
-      html += `<button class="tmpl-chip" onclick="startFromTemplate('${t.id}')">📋 ${t.name}</button>`;
+      html += `<div class="tmpl-chip"><span onclick="startFromTemplate('${t.id}')">📋 ${t.name}</span>`
+        + `<span class="tmpl-chip-x" onclick="deleteTemplate('${t.id}')">✕</span></div>`;
     });
     html += '</div>';
   }
@@ -1768,22 +1774,26 @@ function renderBuilder(){
       <div class="builder-empty-ic">🔍</div>
       <div class="builder-empty-txt">No exercises yet.<br>Add some from the library to get started.</div>
       <button class="dash-hero-btn" onclick="showLibrary()">🔍 Browse exercise library</button>
-    </div>`;
-    html += `<button class="start-save-tmpl" onclick="showTemplates()">📋 Save / manage templates</button>`;
-    html += '</div>';
+    </div></div>`;
     body.innerHTML = html;
     updateStartBtn();
     return;
   }
 
+  html += `<div class="start-sec-lbl" style="display:flex;justify-content:space-between;align-items:center">
+    <span>Your exercises</span>
+    <span style="color:var(--purple);cursor:pointer" onclick="showLibrary()">＋ Browse library</span></div>`;
   sections.forEach(sec=>{
     const exList = exercises[sec]||[];
     if(!exList.length) return;
     const cls = SEC_CLS[sec]||'custom';
     const col = ACCENT[cls];
-    const selCount = exList.filter(e=>builderSelected.has(e)).length;
-    html += `<div class="start-sec-lbl" style="color:${col}">${sec}
-      <span class="start-sec-count">${selCount}/${exList.length}</span></div>`;
+    const only = sections.filter(s=>(exercises[s]||[]).length).length<=1;
+    if(!only){
+      const selCount = exList.filter(e=>builderSelected.has(e)).length;
+      html += `<div class="start-sec-lbl" style="color:${col};padding-top:8px">${sec}
+        <span class="start-sec-count">${selCount}/${exList.length}</span></div>`;
+    }
     html += '<div class="start-ex-grid">';
     exList.forEach(ex=>{
       const on = builderSelected.has(ex);
@@ -1796,10 +1806,9 @@ function renderBuilder(){
     <button class="start-quick-btn" onclick="startSelectAll()">Select All</button>
     <button class="start-quick-btn" onclick="startSelectNone()">Clear Selection</button>
   </div>`;
-  html += `<button class="start-save-tmpl" onclick="showLibrary()">🔍 Browse exercise library</button>`;
-  html += `<button class="start-save-tmpl" onclick="showTemplates()">📋 Save / manage templates</button>`;
   html += '</div>';
   body.innerHTML = html;
+  if(builderSaving){ const i=document.getElementById('builder-tmpl-name'); if(i) i.focus(); }
   updateStartBtn();
 }
 
@@ -2625,75 +2634,26 @@ function calcPlates(){
 // ════════════════════════════════════════════════════════════════
 // TEMPLATES
 // ════════════════════════════════════════════════════════════════
-let tmplSelected = new Set();
-function showTemplates(){
-  // Pre-select from an in-progress workout or the builder picks, if any.
-  tmplSelected = new Set(workoutPlan ? workoutPlan : (builderSelected ? [...builderSelected] : []));
-  renderTemplateList();
-  renderTmplPicker();
-  openModal('templates');
+// Save the current builder selection as a template (inline name entry).
+function startBuilderSave(){
+  if(!builderSelected || !builderSelected.size){ showToast('Tap some exercises to save'); return; }
+  builderSaving = true; renderBuilder();
 }
-function renderTemplateList(){
-  const el=document.getElementById('tmpl-list');
-  if(!templates.length){el.innerHTML='<div class="tmpl-none">No saved templates yet — build one below.</div>';return;}
-  el.innerHTML=`<div class="new-tmpl-title">Your templates</div>`+templates.map(t=>
-    `<div class="tmpl-card">
-      <div class="tmpl-info">
-        <div class="tmpl-name-lbl">${t.name}</div>
-        <div class="tmpl-ex-preview">${(t.exercises||[]).slice(0,4).join(', ')}${(t.exercises||[]).length>4?'…':''}</div>
-      </div>
-      <button class="tmpl-load" onclick="loadTemplate('${t.id}')">Load</button>
-      <button class="tmpl-del" onclick="deleteTemplate('${t.id}')">×</button>
-    </div>`
-  ).join('');
-}
-// Inline picker so a template can be built from your exercises without the builder.
-function renderTmplPicker(){
-  const el=document.getElementById('tmpl-create');
-  const allEx=sections.flatMap(s=>exercises[s]||[]);
-  if(!allEx.length){
-    el.innerHTML=`<div class="new-tmpl-area">
-      <div class="new-tmpl-title">Create a template</div>
-      <div class="tmpl-hint">Your exercise list is empty. Add exercises from the library first, then come back to build a template from them.</div>
-      <button class="tmpl-save-btn" onclick="closeModal('templates');showLibrary()">🔍 Browse exercise library</button>
-    </div>`;
-    return;
-  }
-  const prevName=(document.getElementById('tmpl-name-input')?.value)||'';
-  const pills=allEx.map(ex=>`<div class="start-pill ${tmplSelected.has(ex)?'on custom':''}" onclick="toggleTmplEx('${esc(ex)}')">${ex}</div>`).join('');
-  el.innerHTML=`<div class="new-tmpl-area">
-    <div class="new-tmpl-title">Create a template</div>
-    <div class="tmpl-hint">Tap exercises to include — <b>${tmplSelected.size}</b> selected.</div>
-    <div class="start-ex-grid" style="margin-bottom:12px">${pills}</div>
-    <input class="tmpl-name-input" type="text" id="tmpl-name-input" placeholder="Template name (e.g. Push Day A)" maxlength="40">
-    <button class="tmpl-save-btn" onclick="saveTemplate()">Save Template</button>
-  </div>`;
-  const ni=document.getElementById('tmpl-name-input'); if(ni) ni.value=prevName;
-}
-function toggleTmplEx(ex){
-  if(tmplSelected.has(ex)) tmplSelected.delete(ex); else tmplSelected.add(ex);
-  renderTmplPicker();
-}
-function saveTemplate(){
-  const name=(document.getElementById('tmpl-name-input')?.value||'').trim();
-  if(!tmplSelected.size){showToast('Tap some exercises to include');return;}
-  if(!name){showToast('Name your template');return;}
-  templates.push({id:Date.now().toString(),name,exercises:[...tmplSelected]});
-  saveAll();
-  tmplSelected=new Set();
-  renderTemplateList(); renderTmplPicker();
-  showToast('Template saved: '+name);
-}
-function loadTemplate(id){
-  const t=templates.find(t=>t.id===id);
-  if(!t) return;
-  closeModal('templates');
-  startFromTemplate(id);   // selects the exercises, pre-fills, and starts the workout
-  showToast('Loaded: '+t.name);
+function cancelBuilderSave(){ builderSaving = false; renderBuilder(); }
+function confirmBuilderSave(){
+  const name=(document.getElementById('builder-tmpl-name')?.value||'').trim();
+  if(!name){ showToast('Name your template'); return; }
+  const ex=[...builderSelected];
+  const existing=templates.find(t=>t.name.toLowerCase()===name.toLowerCase());
+  if(existing) existing.exercises=ex;                                 // overwrite = rename/update
+  else templates.push({id:Date.now().toString(), name, exercises:ex});
+  saveAll(); builderSaving=false; renderBuilder();
+  showToast((existing?'Updated':'Saved')+' template: '+name);
 }
 function deleteTemplate(id){
   if(!confirm('Delete this template?')) return;
-  templates=templates.filter(t=>t.id!==id); saveAll(); renderTemplateList();
+  templates=templates.filter(t=>t.id!==id); saveAll();
+  if(activeTab==='log' && builderOpen && !workoutPlan) renderBuilder();
 }
 
 // ════════════════════════════════════════════════════════════════
