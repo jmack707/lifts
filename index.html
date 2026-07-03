@@ -612,6 +612,44 @@ margin-bottom:10px;padding:14px;
 .del-sess-btn{background:none;border:1px solid transparent;color:var(--muted2);
   font-size:11px;font-weight:700;padding:5px 10px;border-radius:6px;cursor:pointer;}
 .del-sess-btn:active{color:var(--core);border-color:var(--core);}
+.edit-sess-btn{background:none;border:1px solid var(--border2);color:var(--muted);
+  font-size:11px;font-weight:700;padding:5px 10px;border-radius:6px;cursor:pointer;margin-right:auto;}
+.edit-sess-btn:active{color:var(--purple);border-color:var(--purple);}
+
+/* ── Session editor ── */
+.se-daterow{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.se-lbl{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);}
+.se-date{flex:1;background:var(--s2);border:1px solid var(--border);border-radius:8px;
+  padding:9px 10px;color:var(--text);font-family:'DM Mono',monospace;font-size:14px;}
+.se-empty{color:var(--muted);font-size:13px;text-align:center;padding:14px 0;}
+.se-ex{background:var(--s2);border:1px solid var(--border);border-radius:12px;padding:11px 12px;margin-bottom:11px;}
+.se-ex-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.se-ex-name{font-weight:700;font-size:14px;}
+.se-set{display:grid;grid-template-columns:22px 1fr 1fr 30px;gap:7px;align-items:center;margin-bottom:6px;}
+.se-set-n{font-family:'DM Mono',monospace;font-size:12px;color:var(--muted2);text-align:center;}
+.se-in{background:var(--s3);border:1px solid var(--border);border-radius:7px;padding:8px;
+  color:var(--text);font-family:'DM Mono',monospace;font-size:14px;text-align:center;width:100%;}
+.se-in:focus{border-color:var(--border2);outline:none;}
+.se-hold{background:var(--s3);border:1px solid transparent;border-radius:7px;padding:8px;
+  color:var(--gold);font-family:'DM Mono',monospace;font-size:12px;text-align:center;}
+.se-x{background:none;border:none;color:var(--muted2);font-size:16px;cursor:pointer;padding:2px;}
+.se-x:active{color:var(--core);}
+.se-ex-actions{margin:4px 0 8px;}
+.se-addset{background:none;border:1px dashed var(--border2);color:var(--muted);border-radius:7px;
+  padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;}
+.se-notes{width:100%;background:var(--s3);border:1px solid var(--border);border-radius:7px;
+  padding:8px;color:var(--text);font-size:13px;margin-top:2px;}
+.se-addex{display:flex;gap:8px;margin:6px 0 16px;}
+.se-exinput{flex:1;background:var(--s2);border:1px solid var(--border);border-radius:8px;
+  padding:10px;color:var(--text);font-size:14px;}
+.se-addex-btn{background:var(--s3);border:1px solid var(--border2);color:var(--text);
+  border-radius:8px;padding:0 16px;font-weight:700;font-size:13px;cursor:pointer;}
+.se-save-row{display:flex;gap:10px;}
+.se-cancel{flex:1;background:var(--s2);border:1px solid var(--border);color:var(--muted);
+  border-radius:10px;padding:13px;font-weight:700;font-size:14px;cursor:pointer;}
+.se-save{flex:2;background:var(--core);border:none;color:#fff;border-radius:10px;
+  padding:13px;font-weight:800;font-size:15px;cursor:pointer;}
+.se-save:active{opacity:.85;}
 
 /* ── Progress ── */
 .prog-body{padding:10px 0;}
@@ -839,6 +877,7 @@ margin-bottom:10px;padding:14px;
   <div class="topbar">
     <div class="topbar-row">
       <div class="app-name">HISTORY</div>
+      <button class="icon-btn" onclick="addPastWorkout()" title="Add a past workout">＋</button>
       <button class="icon-btn" onclick="exportCSV()" title="Export CSV">⬇️</button>
     </div>
   </div>
@@ -975,6 +1014,15 @@ margin-bottom:10px;padding:14px;
     <div class="bar-select" id="bar-select"></div>
     <div class="plate-side">Per Side</div>
     <div id="plate-result"></div>
+  </div>
+</div>
+
+<!-- SESSION EDITOR MODAL (edit a logged workout / add a past one) -->
+<div class="modal-bg" id="modal-sessedit" onclick="closeModal('sessedit')">
+  <div class="modal-sheet" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="sessedit-title">Edit Session</div>
+    <div id="sessedit-body"></div>
   </div>
 </div>
 
@@ -2269,6 +2317,7 @@ function renderHistory(){
           ${notes?`<div class="sess-notes">${notes}</div>`:''}
           ${exRows}
           <div class="sess-footer">
+            <button class="edit-sess-btn" onclick="editSession(${s.id})">✏️ Edit</button>
             <button class="del-sess-btn" onclick="deleteSess(${s.id})">Delete Session</button>
           </div>
         </div>
@@ -2292,10 +2341,151 @@ function openHistorySession(id){
 function deleteSess(id){
   if(!confirm('Delete this session?')) return;
   sessions=sessions.filter(s=>s.id!==id);
-  prs={}; [...sessions].reverse().forEach(s=>(s.exercises||[]).forEach(e=>{
-    if(e.orm>0&&(!prs[e.ex]||e.orm>prs[e.ex].orm)) prs[e.ex]={orm:e.orm,date:s.date};
-  }));
+  rebuildPRs();
   saveAll(); renderHistory(); showToast('Deleted');
+}
+
+// Recompute the all-time PR map AND each session's PR badges by replaying
+// sessions oldest→newest. Called after any history edit/add/delete.
+function rebuildPRs(){
+  prs={};
+  const chrono=[...sessions].sort((a,b)=> a.date<b.date?-1 : a.date>b.date?1 : (a.id-b.id));
+  chrono.forEach(s=>{
+    const sp=[];
+    (s.exercises||[]).forEach(e=>{
+      if(e.orm>0 && (!prs[e.ex]||e.orm>prs[e.ex].orm)){ prs[e.ex]={orm:e.orm,date:s.date}; sp.push(e.ex); }
+    });
+    s.prs=sp;
+  });
+}
+
+// Recompute volume / est-1RM / max-reps for a session from its raw sets.
+function computeSessionMetrics(s){
+  const bw=settings.bw||0; let totVol=0;
+  (s.exercises||[]).forEach(e=>{
+    let vol=0,maxOrm=0,maxReps=0;
+    (e.sets||[]).forEach(st=>{
+      const r=parseFloat(st.r)||0;
+      if(st.hold||st.noload){ if(r>maxReps&&st.noload)maxReps=r; return; }
+      const ew=st.w>0?st.w:(bw>0?bw:0);
+      if(r>maxReps) maxReps=r;
+      if(ew>0&&r>0){ vol+=ew*r; const o=ew*(1+r/30); if(o>maxOrm)maxOrm=o; }
+    });
+    e.vol=Math.round(vol); e.orm=maxOrm>0?Math.round(maxOrm*10)/10:0; e.maxReps=maxReps;
+    totVol+=vol;
+  });
+  s.totalVol=Math.round(totVol);
+}
+
+// ── History editor ─────────────────────────────────────────────
+let sessEdit=null;
+// Every exercise name we know about, for the "add exercise" autocomplete.
+function knownExerciseNames(){
+  const set=new Set();
+  sections.forEach(s=>(exercises[s]||[]).forEach(n=>set.add(n)));
+  sessions.forEach(s=>(s.exercises||[]).forEach(e=>set.add(e.ex)));
+  Object.keys(exInfo||{}).forEach(n=>set.add(n));
+  return [...set].sort((a,b)=>a.localeCompare(b));
+}
+function editSession(id){
+  const s=sessions.find(x=>x.id===id); if(!s) return;
+  // Deep clone the editable bits so Cancel discards cleanly.
+  sessEdit={ id, isNew:false, date:s.date,
+    exercises:(s.exercises||[]).map(e=>({ ex:e.ex, sec:e.sec,
+      notes:e.notes||'',
+      sets:(e.sets||[]).map(st=>({ w:st.w||'', r:st.r||'', hold:st.hold||0, noload:!!st.noload })) })) };
+  openSessEdit('Edit Session');
+}
+function addPastWorkout(){
+  sessEdit={ id:Date.now(), isNew:true, date:workoutDate || new Date().toISOString().slice(0,10), exercises:[] };
+  openSessEdit('Add Past Workout');
+}
+function openSessEdit(title){
+  document.getElementById('sessedit-title').textContent=title;
+  renderSessEdit();
+  openModal('sessedit');
+}
+function renderSessEdit(){
+  const dl=knownExerciseNames().map(n=>`<option value="${n.replace(/"/g,'&quot;')}">`).join('');
+  let h=`<div class="se-daterow">
+    <label class="se-lbl">Date</label>
+    <input type="date" class="se-date" id="se-date" value="${sessEdit.date}" onchange="sessEdit.date=this.value">
+  </div>`;
+  if(!sessEdit.exercises.length){
+    h+=`<div class="se-empty">No exercises yet — add one below.</div>`;
+  }
+  sessEdit.exercises.forEach((e,ei)=>{
+    h+=`<div class="se-ex">
+      <div class="se-ex-hdr">
+        <span class="se-ex-name">${e.ex}</span>
+        <button class="se-x" onclick="seRemoveEx(${ei})" title="Remove exercise">✕</button>
+      </div>`;
+    e.sets.forEach((st,si)=>{
+      const hold=st.hold>0;
+      h+=`<div class="se-set">
+        <span class="se-set-n">${si+1}</span>
+        ${hold
+          ? `<span class="se-hold">hold</span>`
+          : `<input type="number" inputmode="decimal" class="se-in" placeholder="wt" value="${st.w}" oninput="seSet(${ei},${si},'w',this.value)">`}
+        <input type="number" inputmode="numeric" class="se-in" placeholder="${hold?'secs':'reps'}" value="${st.r}" oninput="seSet(${ei},${si},'r',this.value)">
+        <button class="se-x" onclick="seRemoveSet(${ei},${si})" title="Remove set">−</button>
+      </div>`;
+    });
+    h+=`<div class="se-ex-actions">
+        <button class="se-addset" onclick="seAddSet(${ei})">＋ Set</button>
+      </div>
+      <input class="se-notes" placeholder="Notes (optional)…" value="${(e.notes||'').replace(/"/g,'&quot;')}" oninput="sessEdit.exercises[${ei}].notes=this.value">
+    </div>`;
+  });
+  h+=`<div class="se-addex">
+      <input class="se-exinput" id="se-exinput" list="se-exlist" placeholder="Add exercise…">
+      <datalist id="se-exlist">${dl}</datalist>
+      <button class="se-addex-btn" onclick="seAddEx()">Add</button>
+    </div>
+    <div class="se-save-row">
+      <button class="se-cancel" onclick="closeModal('sessedit')">Cancel</button>
+      <button class="se-save" onclick="saveSessEdit()">💾 Save</button>
+    </div>`;
+  document.getElementById('sessedit-body').innerHTML=h;
+}
+function seSet(ei,si,f,v){ sessEdit.exercises[ei].sets[si][f]=v; }
+function seAddSet(ei){ sessEdit.exercises[ei].sets.push({w:'',r:'',hold:0,noload:false}); renderSessEdit(); }
+function seRemoveSet(ei,si){
+  const e=sessEdit.exercises[ei]; e.sets.splice(si,1);
+  if(!e.sets.length) sessEdit.exercises.splice(ei,1);
+  renderSessEdit();
+}
+function seRemoveEx(ei){ sessEdit.exercises.splice(ei,1); renderSessEdit(); }
+function seAddEx(){
+  const inp=document.getElementById('se-exinput');
+  const name=(inp.value||'').trim();
+  if(!name){ showToast('Type an exercise name'); return; }
+  const sec=sections.find(s=>(exercises[s]||[]).includes(name)) || sections[0] || FLAT_SECTION;
+  sessEdit.exercises.push({ ex:name, sec, notes:'', sets:[{w:'',r:'',hold:0,noload:false}] });
+  inp.value=''; renderSessEdit();
+  document.getElementById('sessedit-body').scrollTop=document.getElementById('sessedit-body').scrollHeight;
+}
+function saveSessEdit(){
+  if(!sessEdit) return;
+  // Keep only exercises that have at least one set with reps/seconds.
+  const exs=sessEdit.exercises.map(e=>({
+    ex:e.ex, sec:e.sec, notes:(e.notes||'').trim(),
+    sets:e.sets.map(st=>{ const o={w:parseFloat(st.w)||0, r:parseFloat(st.r)||0, done:true};
+      if(st.hold>0) o.hold=st.hold; if(st.noload) o.noload=true; return o; })
+      .filter(st=>st.r>0||st.w>0)
+  })).filter(e=>e.sets.length);
+  if(!exs.length){ showToast('Add at least one set with reps'); return; }
+  const sess = sessEdit.isNew
+    ? { id:sessEdit.id, date:sessEdit.date, exercises:exs, unit:U(), program:null }
+    : Object.assign(sessions.find(s=>s.id===sessEdit.id), { date:sessEdit.date, exercises:exs });
+  if(sessEdit.isNew) sessions.push(sess);
+  computeSessionMetrics(sess);
+  sessions.sort((a,b)=> a.date<b.date?1 : a.date>b.date?-1 : (b.id-a.id));   // newest first
+  rebuildPRs();
+  saveAll();
+  const wasNew=sessEdit.isNew; sessEdit=null;
+  closeModal('sessedit'); renderHistory();
+  showToast(wasNew?'Past workout added':'Session updated');
 }
 
 function exportCSV(){

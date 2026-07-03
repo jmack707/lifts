@@ -24,7 +24,7 @@ A simple, private workout tracker that runs entirely in your browser. No account
 - **Bodyweight exercises** — leave weight blank; the app tracks reps (and uses your bodyweight for volume if set)
 - **Rest timer** — auto-starts when you check off a set, with a countdown ring, beep, and vibration
 - **Personal records** — automatic PR detection with a confetti celebration 🎉
-- **History** — every past session, grouped by month
+- **History** — every past session, grouped by month; edit any logged workout (date, weights, reps, sets, exercises, notes) or add a backdated one with the ＋ button — PRs recalculate automatically
 - **Progress charts** — estimated 1RM, session volume, and weekly volume over time per exercise
 - **Templates** — save and reload your regular workouts
 - **Plate calculator** — shows which plates to load for any target weight, from your own plate inventory
