@@ -389,6 +389,10 @@ body.wip .page.active{padding-bottom:60px;}
 .mgmt-muscle{font-size:10px;color:var(--muted);font-weight:400;text-transform:capitalize;margin-top:1px;}
 .mgmt-ex-tap{flex:1;cursor:pointer;min-width:0;}
 .mgmt-chevron{color:var(--muted2);font-size:20px;cursor:pointer;padding:2px 8px;flex-shrink:0;}
+.exgroup-seg{display:flex;align-items:center;gap:6px;margin-bottom:10px;}
+.exgroup-lbl{font-size:12px;color:var(--muted);font-weight:600;margin-right:auto;}
+.exgroup-note{font-size:12px;color:var(--muted);font-family:'DM Mono',monospace;padding:6px 2px 12px;}
+.mgmt-sec-count{font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);}
 .exact-list{display:flex;flex-direction:column;gap:8px;margin-top:10px;}
 .exact-btn{text-align:left;background:var(--s2);border:1px solid var(--border);border-radius:10px;
   color:var(--text);font-size:14px;font-weight:600;padding:13px 14px;cursor:pointer;}
@@ -2387,35 +2391,79 @@ function drawChart(container, points, color, unit){
 // ════════════════════════════════════════════════════════════════
 // EXERCISES
 // ════════════════════════════════════════════════════════════════
+// Equipment lookup: what the user set (exInfo), else the library (loaded lazily).
+let LIBEQ=null;
+async function ensureLibEq(){
+  if(LIBEQ) return LIBEQ;
+  await loadExLib();
+  LIBEQ={}; EXLIB.forEach(e=>{ LIBEQ[e.n.toLowerCase()]=e.eq; });
+  return LIBEQ;
+}
+function exEquip(ex){
+  if(exInfo[ex] && exInfo[ex].eq) return exInfo[ex].eq;
+  if(LIBEQ){ const v=LIBEQ[String(ex).toLowerCase()]; if(v) return v; }
+  return 'other';
+}
+function setExGroup(mode){ settings.exGroupBy=mode; saveAll(); renderExercises(); }
+
+function exMgmtRow(sec, ex){
+  return `<div class="mgmt-ex-row" id="mrow-${esc(ex)}">
+    <div class="mgmt-ex-tap" onclick="exActions('${esc(sec)}','${ex}')">
+      <div class="mgmt-ex-name">${ex}${exInfo[ex]?`<div class="mgmt-muscle">${htmlEsc(exInfo[ex].t)}${exInfo[ex].eq?' · '+htmlEsc(exInfo[ex].eq):''}</div>`:''}</div>
+    </div>
+    <div class="mgmt-chevron" onclick="exActions('${esc(sec)}','${ex}')">›</div>
+  </div>`;
+}
+
 function renderExercises(){
   const body=document.getElementById('ex-body');
+  const groupBy = settings.exGroupBy==='equip' ? 'equip' : 'section';
+  // Grouping by equipment needs the library's equipment data — fetch it once.
+  if(groupBy==='equip' && !LIBEQ) ensureLibEq().then(()=>{ if(activeTab==='exercises') renderExercises(); }).catch(()=>{});
   let html='<div class="ex-mgmt">';
   html+=`<button class="lib-launch" onclick="showLibrary()">🔍 Browse exercise library (800+)</button>`;
-  html+=`<div class="add-sec-row">
-    <input class="add-input" id="new-sec-inp" placeholder="New section name…" maxlength="30">
-    <button class="add-confirm" onclick="addSection()">+ Add</button>
-  </div>`;
-  sections.forEach(sec=>{
-    const col=ACCENT[SEC_CLS[sec]||'custom'];
-    const exList=exercises[sec]||[];
-    html+=`<div class="mgmt-section">
-      <div class="mgmt-sec-hdr">
-        <div class="mgmt-sec-name" style="color:${col}">${sec}</div>
-        <button class="mgmt-sec-del" onclick="removeSection('${esc(sec)}')">×</button>
-      </div>
-      ${exList.map(ex=>`<div class="mgmt-ex-row" id="mrow-${esc(ex)}">
-        <div class="mgmt-ex-tap" onclick="exActions('${esc(sec)}','${ex}')">
-          <div class="mgmt-ex-name">${ex}${exInfo[ex]?`<div class="mgmt-muscle">${htmlEsc(exInfo[ex].t)}${exInfo[ex].eq?' · '+htmlEsc(exInfo[ex].eq):''}</div>`:''}</div>
+  html+=`<div class="exgroup-seg"><span class="exgroup-lbl">Group by</span>
+    <button class="seg-opt ${groupBy==='section'?'on':''}" onclick="setExGroup('section')">Section</button>
+    <button class="seg-opt ${groupBy==='equip'?'on':''}" onclick="setExGroup('equip')">Equipment</button></div>`;
+
+  if(groupBy==='equip'){
+    const secOf={}; sections.forEach(s=>(exercises[s]||[]).forEach(ex=>{ if(!(ex in secOf)) secOf[ex]=s; }));
+    const groups={}; Object.keys(secOf).forEach(ex=>{ const eq=exEquip(ex); (groups[eq]=groups[eq]||[]).push(ex); });
+    const keys=Object.keys(groups).sort((a,b)=> a==='other'?1 : b==='other'?-1 : a.localeCompare(b));
+    if(!keys.length) html+=`<div class="exgroup-note">No exercises yet.</div>`;
+    if(!LIBEQ) html+=`<div class="exgroup-note">Loading equipment data… (tap Equipment again if it doesn't refresh)</div>`;
+    keys.forEach(eq=>{
+      const list=groups[eq].sort((a,b)=>a.localeCompare(b));
+      html+=`<div class="mgmt-section">
+        <div class="mgmt-sec-hdr">
+          <div class="mgmt-sec-name" style="color:var(--upper);text-transform:capitalize">${eq==='other'?'Other / unknown':htmlEsc(eq)}</div>
+          <span class="mgmt-sec-count">${list.length}</span>
         </div>
-        <div class="mgmt-chevron" onclick="exActions('${esc(sec)}','${ex}')">›</div>
-      </div>`).join('')}
-      <div class="add-row">
-        <input class="add-input" id="aei-${esc(sec)}" placeholder="Exercise name…" maxlength="40"
-          onkeydown="if(event.key==='Enter')addExercise('${esc(sec)}')">
-        <button class="add-confirm" onclick="addExercise('${esc(sec)}')">Add</button>
-      </div>
+        ${list.map(ex=>exMgmtRow(secOf[ex], ex)).join('')}
+      </div>`;
+    });
+  } else {
+    html+=`<div class="add-sec-row">
+      <input class="add-input" id="new-sec-inp" placeholder="New section name…" maxlength="30">
+      <button class="add-confirm" onclick="addSection()">+ Add</button>
     </div>`;
-  });
+    sections.forEach(sec=>{
+      const col=ACCENT[SEC_CLS[sec]||'custom'];
+      const exList=exercises[sec]||[];
+      html+=`<div class="mgmt-section">
+        <div class="mgmt-sec-hdr">
+          <div class="mgmt-sec-name" style="color:${col}">${sec}</div>
+          <button class="mgmt-sec-del" onclick="removeSection('${esc(sec)}')">×</button>
+        </div>
+        ${exList.map(ex=>exMgmtRow(sec, ex)).join('')}
+        <div class="add-row">
+          <input class="add-input" id="aei-${esc(sec)}" placeholder="Exercise name…" maxlength="40"
+            onkeydown="if(event.key==='Enter')addExercise('${esc(sec)}')">
+          <button class="add-confirm" onclick="addExercise('${esc(sec)}')">Add</button>
+        </div>
+      </div>`;
+    });
+  }
   html+=`<div class="backup-box">
     <div class="backup-lbl">Backup &amp; Restore</div>
     <div class="backup-sub">Save your data to Google Drive or restore from a previous backup.</div>
