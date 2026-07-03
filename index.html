@@ -939,6 +939,13 @@ margin-bottom:10px;padding:14px;
     </div>
     <div class="setting-row">
       <div class="setting-info">
+        <div class="setting-lbl">Auto Rest Timer</div>
+        <div class="setting-sub">Start the rest timer automatically when you check off a set</div>
+      </div>
+      <div class="seg-ctrl" id="autorest-seg"></div>
+    </div>
+    <div class="setting-row">
+      <div class="setting-info">
         <div class="setting-lbl">Workout Layout</div>
         <div class="setting-sub">Focus on one exercise, or show the whole list</div>
       </div>
@@ -2207,12 +2214,12 @@ function postSetRest(ex, i){
     // Round i is done when every paired exercise has its set i checked off (or has no set i).
     const roundDone = mates.every(m=>{ const ms=getDraft(m).sets[i]; return !ms || ms.done; });
     if(roundDone){
-      startRest(unitLabel(mates), `Round ${i+1} done — rest`, settings.rest||90);
+      if(autoRestOn()) startRest(unitLabel(mates), `Round ${i+1} done — rest`, settings.rest||90);
     } else {
       const next = mates.find(m=>{ const ms=getDraft(m).sets[i]; return ms && !ms.done; });
       if(next) showToast('⇄ Next: '+next);
     }
-  } else {
+  } else if(autoRestOn()){
     startRest(ex, info, settings.rest||90);
   }
 }
@@ -3563,6 +3570,7 @@ function renderSettingsPage(){
     `<button class="seg-opt ${(settings.rest||90)===s?'on':''}" onclick="setRestSeg(${s})">${s<120?s+'s':(s/60)+'m'}</button>`
   ).join('');
   renderFocusSeg();
+  renderAutoRestSeg();
   updateBackupLabel();
 }
 // Open the exercise/library manager (list management lives in a modal now).
@@ -3573,6 +3581,13 @@ function renderFocusSeg(){
     `<button class="seg-opt ${!!settings.focusMode===v?'on':''}" onclick="setFocusSeg(${v})">${lbl}</button>`).join('');
 }
 function setFocusSeg(v){ settings.focusMode=v; renderFocusSeg(); }
+// Auto-rest on/off (default on). autoRestOn() is the single source of truth.
+function autoRestOn(){ return settings.autoRest!==false; }
+function renderAutoRestSeg(){
+  document.getElementById('autorest-seg').innerHTML=[['On',true],['Off',false]].map(([lbl,v])=>
+    `<button class="seg-opt ${autoRestOn()===v?'on':''}" onclick="setAutoRestSeg(${v})">${lbl}</button>`).join('');
+}
+function setAutoRestSeg(v){ settings.autoRest=v; saveAll(); renderAutoRestSeg(); }
 function renderUnitSeg(){
   document.getElementById('unit-seg').innerHTML=['lb','kg'].map(u=>
     `<button class="seg-opt ${settingsUnit===u?'on':''}" onclick="setUnitSeg('${u}')">${u}</button>`).join('');
