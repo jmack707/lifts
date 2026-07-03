@@ -398,6 +398,9 @@ body.wip .page.active{padding-bottom:60px;}
 .exgroup-lbl{font-size:12px;color:var(--muted);font-weight:600;margin-right:auto;}
 .exgroup-note{font-size:12px;color:var(--muted);font-family:'DM Mono',monospace;padding:6px 2px 12px;}
 .mgmt-sec-count{font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);}
+.builder-empty{text-align:center;padding:28px 16px 20px;}
+.builder-empty-ic{font-size:40px;margin-bottom:10px;}
+.builder-empty-txt{font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:18px;}
 .exact-list{display:flex;flex-direction:column;gap:8px;margin-top:10px;}
 .exact-btn{text-align:left;background:var(--s2);border:1px solid var(--border);border-radius:10px;
   color:var(--text);font-size:14px;font-weight:600;padding:13px 14px;cursor:pointer;}
@@ -1244,8 +1247,13 @@ margin-bottom:10px;padding:14px;
 
 <script>
 // ── Defaults ──────────────────────────────────────────────────────────────────
-const DEF_SECS = ['Core','Upper Body','Lower Body'];
-const DEF_EX = {
+// New installs start blank — build your own list from the library.
+const DEF_SECS = [];
+const DEF_EX = {};
+const FLAT_SECTION = 'Exercises';   // single bucket for manually/library-added lifts
+// Legacy defaults — used only to detect and reset an untouched old install.
+const OLD_DEF_SECS = ['Core','Upper Body','Lower Body'];
+const OLD_DEF_EX = {
   'Core':       ['Plank','Crunches','Leg Raises','Russian Twists','Cable Crunch'],
   'Upper Body': ['Bench Press','Overhead Press','Bent-Over Row','Pull-Ups','Bicep Curl','Tricep Extension','Lat Pulldown'],
   'Lower Body': ['Back Squat','Deadlift','Leg Press','Lunges','Leg Curl','Leg Extension','Calf Raise']
@@ -1348,6 +1356,14 @@ function loadAll() {
   if(!settings.plates) settings.plates = [...UNIT_DEFAULTS[U()].plates];
   if(settings.bar==null) settings.bar = UNIT_DEFAULTS[U()].bar;
   if(settings.focusMode===undefined) settings.focusMode = true;
+  // One-time: reset an untouched legacy default list to a blank slate.
+  if(!localStorage.getItem('wt_blankmigrated')){
+    localStorage.setItem('wt_blankmigrated','1');
+    if(JSON.stringify(sections)===JSON.stringify(OLD_DEF_SECS) &&
+       JSON.stringify(exercises)===JSON.stringify(OLD_DEF_EX)){
+      sections=[]; exercises={}; saveAll();
+    }
+  }
   // Seed built-in programs (kept fresh) alongside any user programs.
   const userPrograms = (programs||[]).filter(p=>!p.builtin);
   programs = [...builtinPrograms(), ...userPrograms];
@@ -1745,6 +1761,20 @@ function renderBuilder(){
       html += `<button class="tmpl-chip" onclick="startFromTemplate('${t.id}')">📋 ${t.name}</button>`;
     });
     html += '</div>';
+  }
+
+  const totalEx = sections.reduce((n,s)=>n+(exercises[s]||[]).length,0);
+  if(!totalEx){
+    html += `<div class="builder-empty">
+      <div class="builder-empty-ic">🔍</div>
+      <div class="builder-empty-txt">No exercises yet.<br>Add some from the library to get started.</div>
+      <button class="dash-hero-btn" onclick="showLibrary()">🔍 Browse exercise library</button>
+    </div>`;
+    html += `<button class="start-save-tmpl" onclick="showTemplates()">📋 Save / manage templates</button>`;
+    html += '</div>';
+    body.innerHTML = html;
+    updateStartBtn();
+    return;
   }
 
   sections.forEach(sec=>{
@@ -2725,8 +2755,9 @@ function builtinPrograms(){ return [...JSON.parse(JSON.stringify(BUILTIN_PROGRAM
 // everywhere (log, history, progress). Adds it to the program's home section.
 function ensureExercise(ex, section){
   if(sections.some(s=>(exercises[s]||[]).includes(ex))) return;
-  let sec = sections.includes(section) ? section : sections[0];
-  if(!sec){ sec='Workout'; sections.push(sec); exercises[sec]=[]; }
+  let sec = sections.includes(section) ? section : (section || sections[0]);
+  if(!sec){ sec=FLAT_SECTION; }
+  if(!sections.includes(sec)){ sections.push(sec); exercises[sec]=exercises[sec]||[]; }
   if(!exercises[sec]) exercises[sec]=[];
   exercises[sec].push(ex);
 }
@@ -3068,7 +3099,7 @@ function addFromLibraryIdx(i, btn){ const e=libShown[i]; if(e) addFromLibrary(e,
 
 function addFromLibrary(e, btn){
   if(sections.flatMap(s=>exercises[s]||[]).includes(e.n)){ showToast('Already in your list'); return; }
-  const sec = BP_SECTION[e.bp] || sections[0] || 'Upper Body';
+  const sec = FLAT_SECTION;   // one flat list; group by equipment in the Exercises tab
   ensureExercise(e.n, sec);
   exInfo[e.n]={ bp:e.bp, eq:e.eq, t:e.t, s:e.s||[], img:e.img||'' };
   saveAll();
