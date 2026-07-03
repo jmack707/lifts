@@ -179,6 +179,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);
 .setting-row{display:flex;align-items:center;justify-content:space-between;
   padding:13px 0;border-bottom:1px solid var(--border2);}
 .setting-row:last-child{border-bottom:none;}
+.settings-page{padding:12px 14px 96px;overflow-y:auto;height:calc(100% - 60px);}
 .setting-info{flex:1;}
 .setting-lbl{font-size:14px;font-weight:600;}
 .setting-sub{font-size:11px;color:var(--muted);margin-top:2px;}
@@ -865,7 +866,6 @@ margin-bottom:10px;padding:14px;
       </button>
       <input type="date" id="workout-date" onchange="onDateChange()">
       <button class="icon-btn" onclick="showHelp()" title="Help">❓</button>
-      <button class="icon-btn" onclick="showSettings()" title="Settings">⚙️</button>
     </div>
     <div class="pills" id="sec-pills"></div>
   </div>
@@ -896,67 +896,12 @@ margin-bottom:10px;padding:14px;
   <div id="prog-body" class="prog-body"></div>
 </div>
 
-<!-- EXERCISES PAGE -->
-<div class="page" id="page-exercises">
+<!-- SETTINGS PAGE -->
+<div class="page" id="page-settings">
   <div class="topbar">
-    <div class="topbar-row"><div class="app-name">EXERCISES</div></div>
+    <div class="topbar-row"><div class="app-name">SETTINGS</div></div>
   </div>
-  <div id="ex-body"></div>
-</div>
-
-<!-- LOG ACTION BAR (contents set by buildLog) -->
-<div class="log-action" id="log-action">
-  <button class="log-btn" onclick="logWorkout()">LOG WORKOUT</button>
-</div>
-
-<!-- BOTTOM NAV -->
-<nav class="bottom-nav">
-  <button class="nav-btn active" id="nb-log" onclick="switchTab('log')">
-    <span class="nav-icon">🏠</span><span class="nav-lbl">Home</span>
-  </button>
-  <button class="nav-btn" id="nb-history" onclick="switchTab('history')">
-    <span class="nav-icon">📅</span><span class="nav-lbl">History</span>
-  </button>
-  <button class="nav-btn" id="nb-progress" onclick="switchTab('progress')">
-    <span class="nav-icon">📈</span><span class="nav-lbl">Progress</span>
-  </button>
-  <button class="nav-btn" id="nb-exercises" onclick="switchTab('exercises')">
-    <span class="nav-icon">⚙️</span><span class="nav-lbl">Exercises</span>
-  </button>
-</nav>
-
-<!-- REST TIMER OVERLAY -->
-<div class="rest-overlay" id="rest-overlay">
-  <div class="rest-ex" id="rest-ex-name"></div>
-  <div class="rest-set-info" id="rest-set-info"></div>
-  <div class="rest-ring">
-    <svg viewBox="0 0 200 200">
-      <circle class="rest-circle-bg" cx="100" cy="100" r="88"/>
-      <circle class="rest-circle" id="rest-arc" cx="100" cy="100" r="88"
-        stroke-dasharray="552.9" stroke-dashoffset="0"/>
-    </svg>
-    <div class="rest-num">
-      <div class="rest-countdown" id="rest-num">90</div>
-      <div class="rest-next" id="rest-next">REST</div>
-    </div>
-  </div>
-  <div class="rest-actions">
-    <button class="rest-btn" onclick="addRestTime(30)">+30s</button>
-    <button class="rest-btn" onclick="stopRest()">Skip ▶</button>
-  </div>
-  <div class="rest-dur-row">
-    <button class="dur-btn" onclick="setRestDur(60)">1 min</button>
-    <button class="dur-btn" onclick="setRestDur(90)">90s</button>
-    <button class="dur-btn" onclick="setRestDur(120)">2 min</button>
-    <button class="dur-btn" onclick="setRestDur(180)">3 min</button>
-  </div>
-</div>
-
-<!-- SETTINGS MODAL -->
-<div class="modal-bg" id="modal-settings" onclick="closeModal('settings')">
-  <div class="modal-sheet" onclick="event.stopPropagation()">
-    <div class="modal-handle"></div>
-    <div class="modal-title">Settings</div>
+  <div class="settings-page">
     <div class="setting-row">
       <div class="setting-info">
         <div class="setting-lbl">Units</div>
@@ -999,9 +944,82 @@ margin-bottom:10px;padding:14px;
       </div>
       <div class="seg-ctrl" id="focus-seg"></div>
     </div>
-    <div style="padding-top:16px">
+    <div style="padding-top:8px">
       <button onclick="saveSettings()" class="tmpl-save-btn">Save Settings</button>
     </div>
+
+    <button class="lib-launch" style="margin-top:20px" onclick="showExManager()">🏋️ Manage exercises &amp; library</button>
+
+    <div class="backup-box">
+      <div class="backup-lbl">Backup &amp; Restore</div>
+      <div class="backup-sub">Save your data to Google Drive or restore from a previous backup.</div>
+      <div class="backup-btns">
+        <button class="backup-btn" onclick="backupData()">⬇️ Backup to Drive</button>
+        <button class="backup-btn restore" onclick="document.getElementById('restore-input').click()">⬆️ Restore from Drive</button>
+      </div>
+      <div class="backup-last" id="backup-last-lbl"></div>
+    </div>
+    <div class="danger-box">
+      <div class="danger-lbl">Danger Zone</div>
+      <button class="danger-btn" onclick="clearAllData()">Clear All Workout Data</button>
+    </div>
+  </div>
+</div>
+
+<!-- LOG ACTION BAR (contents set by buildLog) -->
+<div class="log-action" id="log-action">
+  <button class="log-btn" onclick="logWorkout()">LOG WORKOUT</button>
+</div>
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav">
+  <button class="nav-btn active" id="nb-log" onclick="switchTab('log')">
+    <span class="nav-icon">🏠</span><span class="nav-lbl">Home</span>
+  </button>
+  <button class="nav-btn" id="nb-history" onclick="switchTab('history')">
+    <span class="nav-icon">📅</span><span class="nav-lbl">History</span>
+  </button>
+  <button class="nav-btn" id="nb-progress" onclick="switchTab('progress')">
+    <span class="nav-icon">📈</span><span class="nav-lbl">Progress</span>
+  </button>
+  <button class="nav-btn" id="nb-settings" onclick="switchTab('settings')">
+    <span class="nav-icon">⚙️</span><span class="nav-lbl">Settings</span>
+  </button>
+</nav>
+
+<!-- REST TIMER OVERLAY -->
+<div class="rest-overlay" id="rest-overlay">
+  <div class="rest-ex" id="rest-ex-name"></div>
+  <div class="rest-set-info" id="rest-set-info"></div>
+  <div class="rest-ring">
+    <svg viewBox="0 0 200 200">
+      <circle class="rest-circle-bg" cx="100" cy="100" r="88"/>
+      <circle class="rest-circle" id="rest-arc" cx="100" cy="100" r="88"
+        stroke-dasharray="552.9" stroke-dashoffset="0"/>
+    </svg>
+    <div class="rest-num">
+      <div class="rest-countdown" id="rest-num">90</div>
+      <div class="rest-next" id="rest-next">REST</div>
+    </div>
+  </div>
+  <div class="rest-actions">
+    <button class="rest-btn" onclick="addRestTime(30)">+30s</button>
+    <button class="rest-btn" onclick="stopRest()">Skip ▶</button>
+  </div>
+  <div class="rest-dur-row">
+    <button class="dur-btn" onclick="setRestDur(60)">1 min</button>
+    <button class="dur-btn" onclick="setRestDur(90)">90s</button>
+    <button class="dur-btn" onclick="setRestDur(120)">2 min</button>
+    <button class="dur-btn" onclick="setRestDur(180)">3 min</button>
+  </div>
+</div>
+
+<!-- EXERCISE MANAGER MODAL -->
+<div class="modal-bg" id="modal-exmgmt" onclick="closeModal('exmgmt')">
+  <div class="modal-sheet" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div>
+    <div class="modal-title">🏋️ Exercises</div>
+    <div id="ex-body"></div>
   </div>
 </div>
 
@@ -1461,7 +1479,7 @@ function switchTab(tab) {
   else { document.getElementById('log-action').style.display='none'; dismissBackupBanner(); }
   if(tab==='history')   renderHistory();
   if(tab==='progress')  renderProgress();
-  if(tab==='exercises') renderExercises();
+  if(tab==='settings')  renderSettingsPage();
   updateWipBar();
 }
 
@@ -2804,7 +2822,7 @@ function renderExercises(){
   const body=document.getElementById('ex-body');
   const groupBy = settings.exGroupBy==='equip' ? 'equip' : 'section';
   // Grouping by equipment needs the library's equipment data — fetch it once.
-  if(groupBy==='equip' && !LIBEQ) ensureLibEq().then(()=>{ if(activeTab==='exercises') renderExercises(); }).catch(()=>{});
+  if(groupBy==='equip' && !LIBEQ) ensureLibEq().then(()=>{ if(exMgrOpen()) renderExercises(); }).catch(()=>{});
   let html='<div class="ex-mgmt">';
   html+=`<button class="lib-launch" onclick="showLibrary()">🔍 Browse exercise library (800+)</button>`;
   html+=`<div class="exgroup-seg"><span class="exgroup-lbl">Group by</span>
@@ -2849,21 +2867,8 @@ function renderExercises(){
       </div>`;
     });
   }
-  html+=`<div class="backup-box">
-    <div class="backup-lbl">Backup &amp; Restore</div>
-    <div class="backup-sub">Save your data to Google Drive or restore from a previous backup.</div>
-    <div class="backup-btns">
-      <button class="backup-btn" onclick="backupData()">⬇️ Backup to Drive</button>
-      <button class="backup-btn restore" onclick="document.getElementById('restore-input').click()">⬆️ Restore from Drive</button>
-    </div>
-    <div class="backup-last" id="backup-last-lbl"></div>
-  </div>
-  <div class="danger-box">
-    <div class="danger-lbl">Danger Zone</div>
-    <button class="danger-btn" onclick="clearAllData()">Clear All Workout Data</button>
-  </div></div>`;
+  html+=`</div>`;
   body.innerHTML=html;
-  updateBackupLabel();
 }
 
 function addSection(){
@@ -2930,7 +2935,8 @@ function moveExercise(fromSec, ex, toSec){
 function clearAllData(){
   if(!confirm('Delete ALL sessions, PRs, and draft data?\nThis cannot be undone.')) return;
   sessions=[]; prs={}; draft={}; saveAll(); saveDraft();
-  renderExercises(); showToast('All data cleared');
+  if(exMgrOpen()) renderExercises();
+  showToast('All data cleared');
 }
 
 // ════════════════════════════════════════════════════════════════
@@ -3484,7 +3490,7 @@ function addFromLibrary(e, btn){
   if(btn){ btn.textContent='✓ Added'; btn.classList.add('added'); }
   const landed = sections.find(s=>(exercises[s]||[]).includes(e.n)) || sec;
   // Refresh whatever's underneath the modal so the new exercise shows up.
-  if(activeTab==='exercises') renderExercises();
+  if(exMgrOpen()) renderExercises();
   else if(activeTab==='log' && builderOpen) renderBuilder();
   showToast('Added to '+landed);
 }
@@ -3543,7 +3549,8 @@ async function showExInfo(rec){
 // ════════════════════════════════════════════════════════════════
 // Working copy of the unit while the modal is open (applied on Save).
 let settingsUnit = 'lb';
-function showSettings(){
+// Populate the Settings tab's controls with current values.
+function renderSettingsPage(){
   settingsUnit = U();
   renderUnitSeg();
   document.getElementById('set-bw').value=settings.bw||'';
@@ -3556,8 +3563,11 @@ function showSettings(){
     `<button class="seg-opt ${(settings.rest||90)===s?'on':''}" onclick="setRestSeg(${s})">${s<120?s+'s':(s/60)+'m'}</button>`
   ).join('');
   renderFocusSeg();
-  openModal('settings');
+  updateBackupLabel();
 }
+// Open the exercise/library manager (list management lives in a modal now).
+function showExManager(){ openModal('exmgmt'); renderExercises(); }
+function exMgrOpen(){ return document.getElementById('modal-exmgmt').classList.contains('active'); }
 function renderFocusSeg(){
   document.getElementById('focus-seg').innerHTML=[['Focus',true],['List',false]].map(([lbl,v])=>
     `<button class="seg-opt ${!!settings.focusMode===v?'on':''}" onclick="setFocusSeg(${v})">${lbl}</button>`).join('');
@@ -3606,7 +3616,7 @@ function saveSettings(){
   settings.bar=parseFloat(document.getElementById('set-bar').value)||UNIT_DEFAULTS[settingsUnit].bar;
   if(settings._pendingPlates){ settings.plates=settings._pendingPlates.sort((a,b)=>b-a); delete settings._pendingPlates; }
   if(!settings.plates||!settings.plates.length) settings.plates=[...UNIT_DEFAULTS[settingsUnit].plates];
-  saveAll(); closeModal('settings');
+  saveAll();
   if(workoutPlan) buildLog(); else calcAll();
   showToast('Settings saved');
 }
