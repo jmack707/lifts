@@ -336,6 +336,7 @@ body.wip .page.active{padding-bottom:60px;}
 .lib-chip.on{background:var(--purple);color:#fff;border-color:transparent;}
 .lib-count{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;padding:2px 2px 8px;}
 .lib-row{display:flex;align-items:center;gap:9px;padding:10px 2px;border-bottom:1px solid var(--border2);}
+.lib-thumb{width:42px;height:42px;border-radius:8px;background:var(--s2);object-fit:cover;flex-shrink:0;}
 .lib-info{flex:1;min-width:0;}
 .lib-name{font-size:13px;font-weight:600;text-transform:capitalize;}
 .lib-meta{font-size:11px;color:var(--muted);margin-top:2px;text-transform:capitalize;}
@@ -367,6 +368,30 @@ body.wip .page.active{padding-bottom:60px;}
   border-radius:10px;color:var(--text);font-size:13px;font-weight:700;cursor:pointer;}
 .lib-launch:active{background:var(--s3);}
 .mgmt-muscle{font-size:10px;color:var(--muted);font-weight:400;text-transform:capitalize;margin-top:1px;}
+.mgmt-ex-tap{flex:1;cursor:pointer;min-width:0;}
+.mgmt-chevron{color:var(--muted2);font-size:20px;cursor:pointer;padding:2px 8px;flex-shrink:0;}
+.exact-list{display:flex;flex-direction:column;gap:8px;margin-top:10px;}
+.exact-btn{text-align:left;background:var(--s2);border:1px solid var(--border);border-radius:10px;
+  color:var(--text);font-size:14px;font-weight:600;padding:13px 14px;cursor:pointer;}
+.exact-btn:active{background:var(--s3);}
+.exact-btn.danger{color:var(--core);border-color:rgba(224,82,82,.3);}
+
+/* ── First-run onboarding ── */
+.onboard-overlay{position:fixed;inset:0;background:var(--bg);z-index:750;display:none;
+  flex-direction:column;align-items:center;justify-content:center;padding:26px 22px;}
+.onboard-overlay.active{display:flex;}
+.onboard-card{width:100%;max-width:360px;text-align:center;}
+.onboard-logo{font-size:52px;margin-bottom:10px;}
+.onboard-title{font-family:'Bebas Neue',sans-serif;font-size:38px;letter-spacing:.06em;line-height:1;}
+.onboard-sub{font-size:14px;color:var(--muted);line-height:1.6;margin:10px 0 26px;}
+.onboard-choices{display:flex;flex-direction:column;gap:10px;}
+.onboard-btn{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;
+  background:var(--s2);border:1px solid var(--border2);border-radius:14px;color:var(--text);
+  font-size:16px;font-weight:700;padding:15px 16px;cursor:pointer;}
+.onboard-btn span{font-size:12px;font-weight:400;color:var(--muted);}
+.onboard-btn.primary{background:linear-gradient(135deg,rgba(155,114,207,.28),rgba(74,158,224,.12));border-color:rgba(155,114,207,.5);}
+.onboard-btn:active{filter:brightness(1.1);}
+.onboard-skip{margin-top:18px;background:none;border:none;color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;}
 .prog-muscle-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:2px 2px 12px;cursor:pointer;}
 /* Library-sourced names arrive lowercase — capitalize for display (won't lowercase existing caps). */
 .ex-name,.mgmt-ex-name,.sess-ex-name,.start-pill,.lib-name{text-transform:capitalize;}
@@ -572,14 +597,6 @@ margin-bottom:10px;padding:14px;
   pointer-events:none;opacity:0;transition:all .2s;z-index:999;}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 
-/* ── Streak bar ── */
-.streak-bar{display:flex;align-items:center;gap:14px;padding:8px 14px 6px;
-  flex-wrap:wrap;}
-.streak-stat{display:flex;align-items:center;gap:5px;font-size:12px;font-weight:600;
-  color:var(--muted);}
-.streak-val{font-family:'DM Mono',monospace;font-weight:700;color:var(--text);}
-.streak-fire{font-size:14px;}
-
 /* ── Plan banner ── */
 .plan-banner{display:flex;align-items:center;gap:8px;padding:6px 14px;
   background:rgba(155,114,207,.1);border-bottom:1px solid rgba(155,114,207,.2);}
@@ -744,14 +761,11 @@ margin-bottom:10px;padding:14px;
   <div class="topbar">
     <div class="topbar-row">
       <div class="app-name">LIFTS</div>
-      <button class="icon-btn" onclick="showHelp()" title="Help">❓</button>
-      <button class="icon-btn" onclick="showPlateCalc()" title="Plate Calculator">🔢</button>
-      <button class="icon-btn" onclick="showPrograms()" title="Programs">📚</button>
-      <button class="icon-btn" onclick="showTemplates()" title="Templates">📋</button>
       <button class="date-btn" onclick="document.getElementById('workout-date').showPicker?.()??document.getElementById('workout-date').click()">
         📅 <span id="date-display">Today</span>
       </button>
       <input type="date" id="workout-date" onchange="onDateChange()">
+      <button class="icon-btn" onclick="showHelp()" title="Help">❓</button>
       <button class="icon-btn" onclick="showSettings()" title="Settings">⚙️</button>
     </div>
     <div class="pills" id="sec-pills"></div>
@@ -760,7 +774,6 @@ margin-bottom:10px;padding:14px;
     <div class="workout-banner-txt" id="plan-banner-txt"></div>
     <button class="workout-edit-btn" onclick="editPlan()">✎ Edit exercises</button>
   </div>
-  <div id="streak-bar" class="streak-bar"></div>
   <div id="log-body" style="flex:1"></div>
 </div>
 
@@ -791,9 +804,8 @@ margin-bottom:10px;padding:14px;
   <div id="ex-body"></div>
 </div>
 
-<!-- LOG ACTION BAR -->
+<!-- LOG ACTION BAR (contents set by buildLog) -->
 <div class="log-action" id="log-action">
-  <button class="sm-btn" onclick="clearLog()">✕ Clear</button>
   <button class="log-btn" onclick="logWorkout()">LOG WORKOUT</button>
 </div>
 
@@ -880,6 +892,13 @@ margin-bottom:10px;padding:14px;
       </div>
       <div class="seg-ctrl" id="rest-seg"></div>
     </div>
+    <div class="setting-row">
+      <div class="setting-info">
+        <div class="setting-lbl">Workout Layout</div>
+        <div class="setting-sub">Focus on one exercise, or show the whole list</div>
+      </div>
+      <div class="seg-ctrl" id="focus-seg"></div>
+    </div>
     <div style="padding-top:16px">
       <button onclick="saveSettings()" class="tmpl-save-btn">Save Settings</button>
     </div>
@@ -930,6 +949,14 @@ margin-bottom:10px;padding:14px;
   </div>
 </div>
 
+<!-- EXERCISE ACTIONS MODAL -->
+<div class="modal-bg" id="modal-exact" onclick="closeModal('exact')">
+  <div class="modal-sheet" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div>
+    <div id="exact-body"></div>
+  </div>
+</div>
+
 <!-- TEMPLATES MODAL -->
 <div class="modal-bg" id="modal-templates" onclick="closeModal('templates')">
   <div class="modal-sheet" onclick="event.stopPropagation()">
@@ -942,6 +969,21 @@ margin-bottom:10px;padding:14px;
         placeholder="Template name (e.g. Push Day A)" maxlength="40">
       <button class="tmpl-save-btn" onclick="saveTemplate()">Save Template</button>
     </div>
+  </div>
+</div>
+
+<!-- FIRST-RUN ONBOARDING -->
+<div class="onboard-overlay" id="onboard-overlay">
+  <div class="onboard-card">
+    <div class="onboard-logo">🏋️</div>
+    <div class="onboard-title">WELCOME TO LIFTS</div>
+    <div class="onboard-sub">Track every set, follow a program, watch the weight go up. Your data stays on your device.</div>
+    <div class="onboard-choices">
+      <button class="onboard-btn primary" onclick="onboardGo('program')">📚 Follow a program<span>StrongLifts, GZCLP, 5/3/1…</span></button>
+      <button class="onboard-btn" onclick="onboardGo('build')">✏️ Build my own workout<span>Pick exercises yourself</span></button>
+      <button class="onboard-btn" onclick="onboardGo('library')">🔍 Explore the exercise library<span>800+ moves with how-to</span></button>
+    </div>
+    <button class="onboard-skip" onclick="onboardGo('')">I'll look around on my own</button>
   </div>
 </div>
 
@@ -1414,7 +1456,6 @@ function buildLog() {
   if(!workoutPlan){
     document.getElementById('sec-pills').innerHTML = '';
     document.getElementById('plan-banner').style.display = 'none';
-    document.getElementById('streak-bar').style.display = 'none';   // the dashboard shows its own stats
     const pg = document.getElementById('page-log');
     if(builderOpen){
       pg.classList.remove('no-action');
@@ -1437,7 +1478,6 @@ function buildLog() {
     `<button class="sm-btn" onclick="endWorkout()">End</button>`+
     `<button class="log-btn" onclick="logWorkout()">LOG WORKOUT</button>`;
   document.getElementById('sec-pills').innerHTML = '';
-  document.getElementById('streak-bar').style.display = 'none';   // clear clutter mid-workout
   const body = document.getElementById('log-body');
   body.innerHTML = settings.focusMode ? buildFocusHTML() : buildListHTML();
   calcAll();
@@ -1588,7 +1628,7 @@ function renderDashboard(){
       const d = new Date(s.date+'T12:00:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
       const label = (s.program&&s.program.day) || (s.exercises||[]).slice(0,2).map(e=>e.ex).join(', ') || 'Workout';
       const prc = (s.prs||[]).length;
-      html += `<div class="dash-recent" onclick="switchTab('history')">
+      html += `<div class="dash-recent" onclick="openHistorySession(${s.id})">
         <div class="dash-recent-d">${d}</div>
         <div class="dash-recent-n">${label}</div>
         ${prc?`<div class="dash-recent-pr">${prc} PR</div>`:''}
@@ -1774,7 +1814,8 @@ function buildCard(sec, ex) {
     <div class="set-controls">
       <button class="set-ctrl-btn" onclick="removeSet('${ex}')" ${n<=1?'disabled':''}>− Set</button>
       <button class="set-ctrl-btn" onclick="addSet('${ex}')">+ Set</button>
-      <button class="warm-btn" onclick="addWarmups('${ex}')" title="Add warm-up sets">🔥 Warm-ups</button>
+      <button class="warm-btn" onclick="addWarmups('${ex}')" title="Add warm-up sets">🔥</button>
+      <button class="warm-btn" onclick="platesFor('${ex}')" title="Plate calculator for this weight">🔢</button>
       <button class="complete-btn" onclick="completeExercise('${ex}')">✓ Complete</button>
     </div>
     <div class="ex-notes-wrap ${hasNotes?'open':''}" id="nwrap-${ke}">
@@ -1990,12 +2031,6 @@ function logWorkout() {
   }, 3000);
 }
 
-function clearLog(){
-  if(!Object.values(draft).some(d=>d&&(d.sets||d).some(s=>(s.w||s.r)))) return;
-  if(!confirm('Clear entries?')) return;
-  draft={}; saveDraft(); buildLog();
-}
-
 // ════════════════════════════════════════════════════════════════
 // HISTORY
 // ════════════════════════════════════════════════════════════════
@@ -2047,6 +2082,15 @@ function renderHistory(){
 
 function toggleSess(id){document.getElementById('sc-'+id)?.classList.toggle('open');}
 
+// Open History focused on one session (from the dashboard's Recent list).
+function openHistorySession(id){
+  switchTab('history');
+  setTimeout(()=>{
+    const c=document.getElementById('sc-'+id);
+    if(c){ c.classList.add('open'); c.scrollIntoView({behavior:'smooth',block:'center'}); }
+  }, 60);
+}
+
 function deleteSess(id){
   if(!confirm('Delete this session?')) return;
   sessions=sessions.filter(s=>s.id!==id);
@@ -2096,6 +2140,22 @@ function renderProgress(){
 function selProgEx(ex){ selectedEx=ex; renderProgress(); }
 // Jump straight to an exercise's chart + full session history.
 function openExerciseHistory(ex){ selectedEx=ex; switchTab('progress'); }
+
+// Bottom sheet of actions for one exercise (declutters the Exercises list).
+function exActions(sec, ex){
+  const info=exInfo[ex];
+  document.getElementById('exact-body').innerHTML=`
+    <div class="exinfo-name" style="font-size:22px">${ex}</div>
+    ${info?`<div class="mgmt-muscle" style="margin:5px 0 4px">${htmlEsc(info.t)}${info.eq?' · '+htmlEsc(info.eq):''}</div>`:''}
+    <div class="exact-list">
+      <button class="exact-btn" onclick="closeModal('exact');openExerciseHistory('${ex}')">📈 History &amp; progress</button>
+      ${info?`<button class="exact-btn" onclick="closeModal('exact');showExInfoName('${ex}')">ⓘ Muscles &amp; how-to</button>`:''}
+      <button class="exact-btn" onclick="closeModal('exact');startRename('${esc(sec)}','${ex}')">✏️ Rename</button>
+      <button class="exact-btn" onclick="closeModal('exact');startMove('${esc(sec)}','${ex}')">↔ Move to another section</button>
+      <button class="exact-btn danger" onclick="closeModal('exact');removeExercise('${esc(sec)}','${esc(ex)}')">🗑 Remove</button>
+    </div>`;
+  openModal('exact');
+}
 
 function renderProgDetail(ex){
   const det=document.getElementById('prog-detail');
@@ -2265,12 +2325,10 @@ function renderExercises(){
         <button class="mgmt-sec-del" onclick="removeSection('${esc(sec)}')">×</button>
       </div>
       ${exList.map(ex=>`<div class="mgmt-ex-row" id="mrow-${esc(ex)}">
-        <div class="mgmt-ex-name">${ex}${exInfo[ex]?`<div class="mgmt-muscle">${htmlEsc(exInfo[ex].t)}${exInfo[ex].eq?' · '+htmlEsc(exInfo[ex].eq):''}</div>`:''}</div>
-        ${exInfo[ex]?`<button class="edit-btn" onclick="showExInfoName('${ex}')" title="Muscles &amp; how-to">ⓘ</button>`:''}
-        <button class="edit-btn" onclick="openExerciseHistory('${ex}')" title="History &amp; progress">📈</button>
-        <button class="edit-btn" onclick="startMove('${esc(sec)}','${ex}')" title="Move to another section">↔</button>
-        <button class="edit-btn" onclick="startRename('${esc(sec)}','${ex}')" title="Rename">✏️</button>
-        <button class="mgmt-del-btn" onclick="removeExercise('${esc(sec)}','${esc(ex)}')">−</button>
+        <div class="mgmt-ex-tap" onclick="exActions('${esc(sec)}','${ex}')">
+          <div class="mgmt-ex-name">${ex}${exInfo[ex]?`<div class="mgmt-muscle">${htmlEsc(exInfo[ex].t)}${exInfo[ex].eq?' · '+htmlEsc(exInfo[ex].eq):''}</div>`:''}</div>
+        </div>
+        <div class="mgmt-chevron" onclick="exActions('${esc(sec)}','${ex}')">›</div>
       </div>`).join('')}
       <div class="add-row">
         <input class="add-input" id="aei-${esc(sec)}" placeholder="Exercise name…" maxlength="40"
@@ -2366,12 +2424,19 @@ function clearAllData(){
 // ════════════════════════════════════════════════════════════════
 // PLATE CALCULATOR
 // ════════════════════════════════════════════════════════════════
-function showPlateCalc(){
+function showPlateCalc(prefill){
   document.getElementById('bar-lbl').textContent=`Bar weight: ${settings.bar||UNIT_DEFAULTS[U()].bar} ${U()}`;
-  document.getElementById('plate-target').value='';
+  document.getElementById('plate-target').value = prefill>0 ? prefill : '';
   document.getElementById('plate-target').placeholder=`Target weight (${U()})`;
   document.getElementById('plate-result').innerHTML='';
   openModal('plate');
+  if(prefill>0) calcPlates();
+}
+// Open the plate calculator prefilled with an exercise's heaviest working weight.
+function platesFor(ex){
+  const d=getDraft(ex);
+  const w=Math.max(0, ...d.sets.filter(s=>!s.warm&&!s.hold&&!s.noload).map(s=>parseFloat(s.w)||0));
+  showPlateCalc(w>0?w:null);
 }
 function calcPlates(){
   const target=parseFloat(document.getElementById('plate-target').value)||0;
@@ -2855,6 +2920,7 @@ function renderLibrary(){
     libShown.map((e,i)=>{
       const isAdded=owned.has(e.n);
       return `<div class="lib-row">
+        ${e.img?`<img class="lib-thumb" loading="lazy" src="${IMG_BASE}${htmlEsc(e.img)}" onerror="this.remove()" alt="">`:''}
         <div class="lib-info">
           <div class="lib-name">${htmlEsc(e.n)}</div>
           <div class="lib-meta">${htmlEsc(e.t)} · ${htmlEsc(e.eq)}</div>
@@ -2937,8 +3003,14 @@ function showSettings(){
   seg.innerHTML=[60,90,120,180].map(s=>
     `<button class="seg-opt ${(settings.rest||90)===s?'on':''}" onclick="setRestSeg(${s})">${s<120?s+'s':(s/60)+'m'}</button>`
   ).join('');
+  renderFocusSeg();
   openModal('settings');
 }
+function renderFocusSeg(){
+  document.getElementById('focus-seg').innerHTML=[['Focus',true],['List',false]].map(([lbl,v])=>
+    `<button class="seg-opt ${!!settings.focusMode===v?'on':''}" onclick="setFocusSeg(${v})">${lbl}</button>`).join('');
+}
+function setFocusSeg(v){ settings.focusMode=v; renderFocusSeg(); }
 function renderUnitSeg(){
   document.getElementById('unit-seg').innerHTML=['lb','kg'].map(u=>
     `<button class="seg-opt ${settingsUnit===u?'on':''}" onclick="setUnitSeg('${u}')">${u}</button>`).join('');
@@ -3132,18 +3204,6 @@ function calcStreak() {
   return { streak, thisWeek, total: dates.length };
 }
 
-function renderStreakBar() {
-  const bar = document.getElementById('streak-bar');
-  if (!bar) return;
-  if (!sessions.length) { bar.innerHTML = ''; return; }
-  const { streak, thisWeek, total } = calcStreak();
-  bar.innerHTML =
-    (streak > 0 ? `<div class="streak-stat"><span class="streak-fire">🔥</span><span class="streak-val">${streak}</span><span>day streak</span></div>` : '') +
-    `<div class="streak-stat">💪 <span class="streak-val">${thisWeek}</span> this week</div>` +
-    `<div class="streak-stat">📅 <span class="streak-val">${total}</span> total sessions</div>`;
-}
-
-
 // ── Session Summary ────────────────────────────────────────────
 function showSessionSummary(rows, newPRs, totalVol, progMsgs) {
   const ov = document.getElementById('summary-overlay');
@@ -3307,6 +3367,19 @@ function toggleCollapse(ex) {
   if (card) card.classList.toggle('collapsed');
 }
 
+// ── First-run onboarding ──────────────────────────────────────
+function maybeOnboard(){
+  if(!localStorage.getItem('wt_onboarded') && !sessions.length)
+    document.getElementById('onboard-overlay').classList.add('active');
+}
+function onboardGo(where){
+  localStorage.setItem('wt_onboarded','1');
+  document.getElementById('onboard-overlay').classList.remove('active');
+  if(where==='program') showPrograms();
+  else if(where==='build') openBuilder();
+  else if(where==='library') showLibrary();
+}
+
 // ── Help & Backup reminder ────────────────────────────────────
 function showHelp(){ openModal('help'); }
 
@@ -3335,6 +3408,7 @@ function showToast(msg,ms=2400){
 loadAll();
 buildLog();   // sets the log-action bar visibility itself (hidden on the dashboard)
 updateDurBtns();
+maybeOnboard();
 setTimeout(updateBackupLabel, 100);
 
 // ── Register service worker for offline use ──
