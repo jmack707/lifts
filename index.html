@@ -209,6 +209,20 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);
   padding:1px 4px;border-radius:3px;margin-left:4px;letter-spacing:.04em;}
 .prescribe-note{font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;
   padding:0 12px 6px;}
+.rpe-badge{font-size:8px;font-weight:700;background:var(--purple);color:#fff;
+  padding:1px 4px;border-radius:3px;margin-left:4px;letter-spacing:.03em;}
+.set-hold-lbl{background:var(--s2);border:1px solid transparent;border-radius:8px;
+  color:var(--muted);font-family:'DM Mono',monospace;font-size:13px;
+  padding:9px 6px;text-align:center;}
+
+/* ── Superset group + badge ── */
+.superset-group{border:1px solid rgba(74,158,224,.3);border-radius:14px;
+  padding:8px 6px 2px;margin-bottom:10px;background:rgba(74,158,224,.04);}
+.superset-lbl{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--upper);padding:2px 8px 8px;}
+.superset-group .ex-card{margin-bottom:8px;}
+.ss-badge{font-size:9px;font-weight:700;background:var(--upper);color:#fff;
+  padding:1px 6px;border-radius:4px;margin-left:7px;vertical-align:middle;letter-spacing:.03em;}
 
 /* ── Programs ── */
 .prog-active-card{margin:2px 0 6px;padding:12px 14px;border-radius:var(--r);
@@ -1049,6 +1063,9 @@ const BUILTIN_PROGRAMS = [
     ]}
 ];
 
+// ── Callie 16-week athlete program (parsed from the uploaded Liftoscript) ──
+const CALLIE_PROGRAM = {"id":"callie16","name":"Callie · 16-Week Athlete","builtin":true,"mode":"rpe","section":"Callie Program","weeks":[{"name":"Wk 1 · Foundation","days":[{"name":"Lower A","exercises":[{"ex":"Drop and Stick","scheme":{"sets":3,"reps":4,"bw":true}},{"ex":"Goblet Squat","scheme":{"sets":3,"reps":10,"repsLabel":"10-12","rpe":7}},{"ex":"Reverse Lunge","scheme":{"sets":3,"reps":10,"rpe":7},"superset":"S1"},{"ex":"Pallof Press","scheme":{"sets":3,"reps":10,"bw":true},"superset":"S1"},{"ex":"Hip Thrust","scheme":{"sets":3,"reps":12,"rpe":7},"superset":"S2"},{"ex":"Hip Abductor","scheme":{"sets":3,"reps":15,"bw":true},"superset":"S2"}]},{"name":"Upper A","exercises":[{"ex":"Bench Press, Dumbbell","scheme":{"sets":3,"reps":10,"repsLabel":"10-12","rpe":7},"superset":"A"},{"ex":"Dumbbell Row","scheme":{"sets":3,"reps":12,"rpe":7},"superset":"A"},{"ex":"Shoulder Press, Dumbbell","scheme":{"sets":3,"reps":10,"rpe":7},"superset":"B"},{"ex":"Lat Pulldown","scheme":{"sets":3,"reps":10,"repsLabel":"10-12","rpe":7},"superset":"B"},{"ex":"Face Pull","scheme":{"sets":3,"reps":15,"bw":true},"superset":"C"},{"ex":"Plank","scheme":{"sets":3,"reps":1,"hold":30},"superset":"C"}]},{"name":"Lower B","exercises":[{"ex":"Pogo Hops","scheme":{"sets":3,"reps":10,"bw":true}},{"ex":"Romanian Deadlift","scheme":{"sets":3,"reps":10,"repsLabel":"10-12","rpe":7}},{"ex":"Step Up","scheme":{"sets":3,"reps":8,"rpe":7},"superset":"S1"},{"ex":"Nordic Curl","scheme":{"sets":3,"reps":5,"bw":true},"superset":"S1"},{"ex":"Hip Abductor","scheme":{"sets":3,"reps":15,"bw":true},"superset":"S2"},{"ex":"Side Plank","scheme":{"sets":3,"reps":1,"hold":25},"superset":"S2"}]},{"name":"Upper B","exercises":[{"ex":"Lat Pulldown","scheme":{"sets":3,"reps":10,"repsLabel":"10-12","rpe":7},"superset":"A"},{"ex":"Incline Bench Press, Dumbbell","scheme":{"sets":3,"reps":10,"rpe":7},"superset":"A"},{"ex":"Bent Over Row, Dumbbell","scheme":{"sets":3,"reps":12,"rpe":7},"superset":"B"},{"ex":"Shoulder Press, Dumbbell","scheme":{"sets":3,"reps":10,"rpe":7},"superset":"B"},{"ex":"Face Pull","scheme":{"sets":3,"reps":15,"bw":true},"superset":"C"},{"ex":"Bird Dog","scheme":{"sets":3,"reps":8,"bw":true},"superset":"C"}]}]},{"name":"Wk 2 · Foundation","days":[{"name":"Lower A","exercises":[{"ex":"Drop and Stick","scheme":{"sets":3,"reps":4,"bw":true}},{"ex":"Goblet Squat","scheme":{"sets":3,"reps":10,"repsLabel":"10-12","rpe":7}},{"ex":"Reverse Lunge","scheme":{"sets":3,"reps":10,"rpe":7},"superset":"S1"},{"ex":"Pallof Press","scheme":{"sets":3,"reps":10,"bw":true},"superset":"S1"},{"ex":"Hip Thrust","scheme":{"sets":3,"reps":12,"rpe":7},"superset":"S2"},{"ex":"Hip Abductor","scheme":{"sets":3,"reps":15,"bw":true},"superset":"S2"}]},{"name":"Upper A","exercises":[{"ex":"Bench Press, Dumbbell","scheme":{"sets":3,"reps":10,"repsLabel":"10-12","rpe":7},"superset":"A"},{"ex":"Dumbbell Row","scheme":{"sets":3,"reps":12,"rpe":7},"superset":"A"},{"ex":"Shoulder Press, Dumbbell","scheme":{"sets":3,"reps":10,"rpe":7},"superset":"B"},{"ex":"Lat Pulldown","scheme":{"sets":3,"reps":10,"repsLabel":"10-12","rpe":7},"superset":"B"},{"ex":"Face Pull","scheme":{"sets":3,"reps":15,"bw":true},"superset":"C"},{"ex":"Plank","scheme":{"sets":3,"reps":1,"hold":30},"superset":"C"}]},{"name":"Lower B","exercises":[{"ex":"Pogo Hops","scheme":{"sets":3,"reps":10,"bw":true}},{"ex":"Romanian Deadlift","scheme":{"sets":3,"reps":10,"repsLabel":"10-12","rpe":7}},{"ex":"Step Up","scheme":{"sets":3,"reps":8,"rpe":7},"superset":"S1"},{"ex":"Nordic Curl","scheme":{"sets":3,"reps":5,"bw":true},"superset":"S1"},{"ex":"Hip Abductor","scheme":{"sets":3,"reps":15,"bw":true},"superset":"S2"},{"ex":"Side Plank","scheme":{"sets":3,"reps":1,"hold":25},"superset":"S2"}]},{"name":"Upper B","exercises":[{"ex":"Lat Pulldown","scheme":{"sets":3,"reps":10,"repsLabel":"10-12","rpe":7},"superset":"A"},{"ex":"Incline Bench Press, Dumbbell","scheme":{"sets":3,"reps":10,"rpe":7},"superset":"A"},{"ex":"Bent Over Row, Dumbbell","scheme":{"sets":3,"reps":12,"rpe":7},"superset":"B"},{"ex":"Shoulder Press, Dumbbell","scheme":{"sets":3,"reps":10,"rpe":7},"superset":"B"},{"ex":"Face Pull","scheme":{"sets":3,"reps":15,"bw":true},"superset":"C"},{"ex":"Bird Dog","scheme":{"sets":3,"reps":8,"bw":true},"superset":"C"}]}]},{"name":"Wk 3 · Foundation","days":[{"name":"Lower A","exercises":[{"ex":"Drop and Stick","scheme":{"sets":3,"reps":4,"bw":true}},{"ex":"Goblet Squat","scheme":{"sets":3,"reps":10,"repsLabel":"10-12","rpe":7}},{"ex":"Reverse Lunge","scheme":{"sets":3,"reps":10,"rpe":7},"superset":"S1"},{"ex":"Pallof Press","scheme":{"sets":3,"reps":10,"bw":true},"superset":"S1"},{"ex":"Hip Thrust","scheme":{"sets":3,"reps":12,"rpe":7},"superset":"S2"},{"ex":"Hip Abductor","scheme":{"sets":3,"reps":15,"bw":true},"superset":"S2"}]},{"name":"Upper A","exercises":[{"ex":"Bench Press, Dumbbell","scheme":{"sets":3,"reps":10,"repsLabel":"10-12","rpe":7},"superset":"A"},{"ex":"Dumbbell Row","scheme":{"sets":3,"reps":12,"rpe":7},"superset":"A"},{"ex":"Shoulder Press, Dumbbell","scheme":{"sets":3,"reps":10,"rpe":7},"superset":"B"},{"ex":"Lat Pulldown","scheme":{"sets":3,"reps":10,"repsLabel":"10-12","rpe":7},"superset":"B"},{"ex":"Face Pull","scheme":{"sets":3,"reps":15,"bw":true},"superset":"C"},{"ex":"Plank","scheme":{"sets":3,"reps":1,"hold":30},"superset":"C"}]},{"name":"Lower B","exercises":[{"ex":"Pogo Hops","scheme":{"sets":3,"reps":10,"bw":true}},{"ex":"Romanian Deadlift","scheme":{"sets":3,"reps":10,"repsLabel":"10-12","rpe":7}},{"ex":"Step Up","scheme":{"sets":3,"reps":8,"rpe":7},"superset":"S1"},{"ex":"Nordic Curl","scheme":{"sets":3,"reps":5,"bw":true},"superset":"S1"},{"ex":"Hip Abductor","scheme":{"sets":3,"reps":15,"bw":true},"superset":"S2"},{"ex":"Side Plank","scheme":{"sets":3,"reps":1,"hold":25},"superset":"S2"}]},{"name":"Upper B","exercises":[{"ex":"Lat Pulldown","scheme":{"sets":3,"reps":10,"repsLabel":"10-12","rpe":7},"superset":"A"},{"ex":"Incline Bench Press, Dumbbell","scheme":{"sets":3,"reps":10,"rpe":7},"superset":"A"},{"ex":"Bent Over Row, Dumbbell","scheme":{"sets":3,"reps":12,"rpe":7},"superset":"B"},{"ex":"Shoulder Press, Dumbbell","scheme":{"sets":3,"reps":10,"rpe":7},"superset":"B"},{"ex":"Face Pull","scheme":{"sets":3,"reps":15,"bw":true},"superset":"C"},{"ex":"Bird Dog","scheme":{"sets":3,"reps":8,"bw":true},"superset":"C"}]}]},{"name":"Wk 4 · Deload","days":[{"name":"Lower A","exercises":[{"ex":"Drop and Stick","scheme":{"sets":2,"reps":4,"bw":true}},{"ex":"Goblet Squat","scheme":{"sets":2,"reps":10,"repsLabel":"10-12","rpe":6}},{"ex":"Reverse Lunge","scheme":{"sets":2,"reps":10,"rpe":6},"superset":"S1"},{"ex":"Pallof Press","scheme":{"sets":2,"reps":10,"bw":true},"superset":"S1"},{"ex":"Hip Thrust","scheme":{"sets":2,"reps":12,"rpe":6},"superset":"S2"},{"ex":"Hip Abductor","scheme":{"sets":2,"reps":15,"bw":true},"superset":"S2"}]},{"name":"Upper A","exercises":[{"ex":"Bench Press, Dumbbell","scheme":{"sets":2,"reps":10,"repsLabel":"10-12","rpe":6},"superset":"A"},{"ex":"Dumbbell Row","scheme":{"sets":2,"reps":12,"rpe":6},"superset":"A"},{"ex":"Shoulder Press, Dumbbell","scheme":{"sets":2,"reps":10,"rpe":6},"superset":"B"},{"ex":"Lat Pulldown","scheme":{"sets":2,"reps":10,"repsLabel":"10-12","rpe":6},"superset":"B"},{"ex":"Face Pull","scheme":{"sets":2,"reps":15,"bw":true},"superset":"C"},{"ex":"Plank","scheme":{"sets":2,"reps":1,"hold":30},"superset":"C"}]},{"name":"Lower B","exercises":[{"ex":"Pogo Hops","scheme":{"sets":2,"reps":10,"bw":true}},{"ex":"Romanian Deadlift","scheme":{"sets":2,"reps":10,"repsLabel":"10-12","rpe":6}},{"ex":"Step Up","scheme":{"sets":2,"reps":8,"rpe":6},"superset":"S1"},{"ex":"Nordic Curl","scheme":{"sets":2,"reps":5,"bw":true},"superset":"S1"},{"ex":"Hip Abductor","scheme":{"sets":2,"reps":15,"bw":true},"superset":"S2"},{"ex":"Side Plank","scheme":{"sets":2,"reps":1,"hold":25},"superset":"S2"}]},{"name":"Upper B","exercises":[{"ex":"Lat Pulldown","scheme":{"sets":2,"reps":10,"repsLabel":"10-12","rpe":6},"superset":"A"},{"ex":"Incline Bench Press, Dumbbell","scheme":{"sets":2,"reps":10,"rpe":6},"superset":"A"},{"ex":"Bent Over Row, Dumbbell","scheme":{"sets":2,"reps":12,"rpe":6},"superset":"B"},{"ex":"Shoulder Press, Dumbbell","scheme":{"sets":2,"reps":10,"rpe":6},"superset":"B"},{"ex":"Face Pull","scheme":{"sets":2,"reps":15,"bw":true},"superset":"C"},{"ex":"Bird Dog","scheme":{"sets":2,"reps":8,"bw":true},"superset":"C"}]}]},{"name":"Wk 5 · Build","days":[{"name":"Lower A","exercises":[{"ex":"Box Jump","scheme":{"sets":4,"reps":4,"bw":true}},{"ex":"Squat","scheme":{"sets":4,"reps":6,"repsLabel":"6-8","rpe":8}},{"ex":"Bulgarian Split Squat","scheme":{"sets":3,"reps":8,"rpe":8},"superset":"S1"},{"ex":"Pallof Press","scheme":{"sets":3,"reps":10,"bw":true},"superset":"S1"},{"ex":"Hip Thrust","scheme":{"sets":3,"reps":10,"rpe":8},"superset":"S2"},{"ex":"Hip Abductor","scheme":{"sets":3,"reps":15,"bw":true},"superset":"S2"}]},{"name":"Upper A","exercises":[{"ex":"Bench Press","scheme":{"sets":4,"reps":6,"repsLabel":"6-8","rpe":8},"superset":"A"},{"ex":"Dumbbell Row","scheme":{"sets":4,"reps":8,"rpe":8},"superset":"A"},{"ex":"Shoulder Press, Dumbbell","scheme":{"sets":3,"reps":8,"rpe":8},"superset":"B"},{"ex":"Pull Up","scheme":{"sets":3,"reps":8,"rpe":8},"superset":"B"},{"ex":"Face Pull","scheme":{"sets":3,"reps":15,"bw":true},"superset":"C"},{"ex":"Plank","scheme":{"sets":3,"reps":1,"hold":30},"superset":"C"}]},{"name":"Lower B","exercises":[{"ex":"Broad Jump","scheme":{"sets":4,"reps":3,"bw":true}},{"ex":"Romanian Deadlift","scheme":{"sets":4,"reps":6,"repsLabel":"6-8","rpe":8}},{"ex":"Single Leg Deadlift","scheme":{"sets":3,"reps":8,"rpe":8},"superset":"S1"},{"ex":"Nordic Curl","scheme":{"sets":3,"reps":6,"bw":true},"superset":"S1"},{"ex":"Hip Abductor","scheme":{"sets":3,"reps":15,"bw":true},"superset":"S2"},{"ex":"Side Plank","scheme":{"sets":3,"reps":1,"hold":25},"superset":"S2"}]},{"name":"Upper B","exercises":[{"ex":"Lat Pulldown","scheme":{"sets":4,"reps":8,"repsLabel":"8-10","rpe":8},"superset":"A"},{"ex":"Incline Bench Press, Dumbbell","scheme":{"sets":4,"reps":8,"rpe":8},"superset":"A"},{"ex":"Bent Over Row","scheme":{"sets":3,"reps":8,"rpe":8},"superset":"B"},{"ex":"Shoulder Press, Dumbbell","scheme":{"sets":3,"reps":8,"rpe":8},"superset":"B"},{"ex":"Face Pull","scheme":{"sets":3,"reps":15,"bw":true},"superset":"C"},{"ex":"Bird Dog","scheme":{"sets":3,"reps":8,"bw":true},"superset":"C"}]}]},{"name":"Wk 6 · Build","days":[{"name":"Lower A","exercises":[{"ex":"Box Jump","scheme":{"sets":4,"reps":4,"bw":true}},{"ex":"Squat","scheme":{"sets":4,"reps":6,"repsLabel":"6-8","rpe":8}},{"ex":"Bulgarian Split Squat","scheme":{"sets":3,"reps":8,"rpe":8},"superset":"S1"},{"ex":"Pallof Press","scheme":{"sets":3,"reps":10,"bw":true},"superset":"S1"},{"ex":"Hip Thrust","scheme":{"sets":3,"reps":10,"rpe":8},"superset":"S2"},{"ex":"Hip Abductor","scheme":{"sets":3,"reps":15,"bw":true},"superset":"S2"}]},{"name":"Upper A","exercises":[{"ex":"Bench Press","scheme":{"sets":4,"reps":6,"repsLabel":"6-8","rpe":8},"superset":"A"},{"ex":"Dumbbell Row","scheme":{"sets":4,"reps":8,"rpe":8},"superset":"A"},{"ex":"Shoulder Press, Dumbbell","scheme":{"sets":3,"reps":8,"rpe":8},"superset":"B"},{"ex":"Pull Up","scheme":{"sets":3,"reps":8,"rpe":8},"superset":"B"},{"ex":"Face Pull","scheme":{"sets":3,"reps":15,"bw":true},"superset":"C"},{"ex":"Plank","scheme":{"sets":3,"reps":1,"hold":30},"superset":"C"}]},{"name":"Lower B","exercises":[{"ex":"Broad Jump","scheme":{"sets":4,"reps":3,"bw":true}},{"ex":"Romanian Deadlift","scheme":{"sets":4,"reps":6,"repsLabel":"6-8","rpe":8}},{"ex":"Single Leg Deadlift","scheme":{"sets":3,"reps":8,"rpe":8},"superset":"S1"},{"ex":"Nordic Curl","scheme":{"sets":3,"reps":6,"bw":true},"superset":"S1"},{"ex":"Hip Abductor","scheme":{"sets":3,"reps":15,"bw":true},"superset":"S2"},{"ex":"Side Plank","scheme":{"sets":3,"reps":1,"hold":25},"superset":"S2"}]},{"name":"Upper B","exercises":[{"ex":"Lat Pulldown","scheme":{"sets":4,"reps":8,"repsLabel":"8-10","rpe":8},"superset":"A"},{"ex":"Incline Bench Press, Dumbbell","scheme":{"sets":4,"reps":8,"rpe":8},"superset":"A"},{"ex":"Bent Over Row","scheme":{"sets":3,"reps":8,"rpe":8},"superset":"B"},{"ex":"Shoulder Press, Dumbbell","scheme":{"sets":3,"reps":8,"rpe":8},"superset":"B"},{"ex":"Face Pull","scheme":{"sets":3,"reps":15,"bw":true},"superset":"C"},{"ex":"Bird Dog","scheme":{"sets":3,"reps":8,"bw":true},"superset":"C"}]}]},{"name":"Wk 7 · Build","days":[{"name":"Lower A","exercises":[{"ex":"Box Jump","scheme":{"sets":4,"reps":4,"bw":true}},{"ex":"Squat","scheme":{"sets":4,"reps":6,"repsLabel":"6-8","rpe":8}},{"ex":"Bulgarian Split Squat","scheme":{"sets":3,"reps":8,"rpe":8},"superset":"S1"},{"ex":"Pallof Press","scheme":{"sets":3,"reps":10,"bw":true},"superset":"S1"},{"ex":"Hip Thrust","scheme":{"sets":3,"reps":10,"rpe":8},"superset":"S2"},{"ex":"Hip Abductor","scheme":{"sets":3,"reps":15,"bw":true},"superset":"S2"}]},{"name":"Upper A","exercises":[{"ex":"Bench Press","scheme":{"sets":4,"reps":6,"repsLabel":"6-8","rpe":8},"superset":"A"},{"ex":"Dumbbell Row","scheme":{"sets":4,"reps":8,"rpe":8},"superset":"A"},{"ex":"Shoulder Press, Dumbbell","scheme":{"sets":3,"reps":8,"rpe":8},"superset":"B"},{"ex":"Pull Up","scheme":{"sets":3,"reps":8,"rpe":8},"superset":"B"},{"ex":"Face Pull","scheme":{"sets":3,"reps":15,"bw":true},"superset":"C"},{"ex":"Plank","scheme":{"sets":3,"reps":1,"hold":30},"superset":"C"}]},{"name":"Lower B","exercises":[{"ex":"Broad Jump","scheme":{"sets":4,"reps":3,"bw":true}},{"ex":"Romanian Deadlift","scheme":{"sets":4,"reps":6,"repsLabel":"6-8","rpe":8}},{"ex":"Single Leg Deadlift","scheme":{"sets":3,"reps":8,"rpe":8},"superset":"S1"},{"ex":"Nordic Curl","scheme":{"sets":3,"reps":6,"bw":true},"superset":"S1"},{"ex":"Hip Abductor","scheme":{"sets":3,"reps":15,"bw":true},"superset":"S2"},{"ex":"Side Plank","scheme":{"sets":3,"reps":1,"hold":25},"superset":"S2"}]},{"name":"Upper B","exercises":[{"ex":"Lat Pulldown","scheme":{"sets":4,"reps":8,"repsLabel":"8-10","rpe":8},"superset":"A"},{"ex":"Incline Bench Press, Dumbbell","scheme":{"sets":4,"reps":8,"rpe":8},"superset":"A"},{"ex":"Bent Over Row","scheme":{"sets":3,"reps":8,"rpe":8},"superset":"B"},{"ex":"Shoulder Press, Dumbbell","scheme":{"sets":3,"reps":8,"rpe":8},"superset":"B"},{"ex":"Face Pull","scheme":{"sets":3,"reps":15,"bw":true},"superset":"C"},{"ex":"Bird Dog","scheme":{"sets":3,"reps":8,"bw":true},"superset":"C"}]}]},{"name":"Wk 8 · Deload","days":[{"name":"Lower A","exercises":[{"ex":"Box Jump","scheme":{"sets":2,"reps":4,"bw":true}},{"ex":"Squat","scheme":{"sets":2,"reps":6,"repsLabel":"6-8","rpe":7}},{"ex":"Bulgarian Split Squat","scheme":{"sets":2,"reps":8,"rpe":7},"superset":"S1"},{"ex":"Pallof Press","scheme":{"sets":2,"reps":10,"bw":true},"superset":"S1"},{"ex":"Hip Thrust","scheme":{"sets":2,"reps":10,"rpe":7},"superset":"S2"},{"ex":"Hip Abductor","scheme":{"sets":2,"reps":15,"bw":true},"superset":"S2"}]},{"name":"Upper A","exercises":[{"ex":"Bench Press","scheme":{"sets":2,"reps":6,"repsLabel":"6-8","rpe":7},"superset":"A"},{"ex":"Dumbbell Row","scheme":{"sets":2,"reps":8,"rpe":7},"superset":"A"},{"ex":"Shoulder Press, Dumbbell","scheme":{"sets":2,"reps":8,"rpe":7},"superset":"B"},{"ex":"Pull Up","scheme":{"sets":2,"reps":8,"rpe":7},"superset":"B"},{"ex":"Face Pull","scheme":{"sets":2,"reps":15,"bw":true},"superset":"C"},{"ex":"Plank","scheme":{"sets":2,"reps":1,"hold":30},"superset":"C"}]},{"name":"Lower B","exercises":[{"ex":"Broad Jump","scheme":{"sets":2,"reps":3,"bw":true}},{"ex":"Romanian Deadlift","scheme":{"sets":2,"reps":6,"repsLabel":"6-8","rpe":7}},{"ex":"Single Leg Deadlift","scheme":{"sets":2,"reps":8,"rpe":7},"superset":"S1"},{"ex":"Nordic Curl","scheme":{"sets":2,"reps":6,"bw":true},"superset":"S1"},{"ex":"Hip Abductor","scheme":{"sets":2,"reps":15,"bw":true},"superset":"S2"},{"ex":"Side Plank","scheme":{"sets":2,"reps":1,"hold":25},"superset":"S2"}]},{"name":"Upper B","exercises":[{"ex":"Lat Pulldown","scheme":{"sets":2,"reps":8,"repsLabel":"8-10","rpe":7},"superset":"A"},{"ex":"Incline Bench Press, Dumbbell","scheme":{"sets":2,"reps":8,"rpe":7},"superset":"A"},{"ex":"Bent Over Row","scheme":{"sets":2,"reps":8,"rpe":7},"superset":"B"},{"ex":"Shoulder Press, Dumbbell","scheme":{"sets":2,"reps":8,"rpe":7},"superset":"B"},{"ex":"Face Pull","scheme":{"sets":2,"reps":15,"bw":true},"superset":"C"},{"ex":"Bird Dog","scheme":{"sets":2,"reps":8,"bw":true},"superset":"C"}]}]},{"name":"Wk 9 · Strength","days":[{"name":"Lower A","exercises":[{"ex":"Single Leg Hop","scheme":{"sets":4,"reps":3,"bw":true}},{"ex":"Squat","scheme":{"sets":5,"reps":4,"repsLabel":"4-6","rpe":8}},{"ex":"Bulgarian Split Squat","scheme":{"sets":3,"reps":6,"rpe":8},"superset":"S1"},{"ex":"Pallof Press","scheme":{"sets":3,"reps":10,"bw":true},"superset":"S1"},{"ex":"Hip Thrust","scheme":{"sets":3,"reps":8,"rpe":8},"superset":"S2"},{"ex":"Hip Abductor","scheme":{"sets":3,"reps":15,"bw":true},"superset":"S2"}]},{"name":"Upper A","exercises":[{"ex":"Bench Press","scheme":{"sets":5,"reps":4,"repsLabel":"4-6","rpe":8},"superset":"A"},{"ex":"Dumbbell Row","scheme":{"sets":5,"reps":6,"rpe":8},"superset":"A"},{"ex":"Shoulder Press, Dumbbell","scheme":{"sets":3,"reps":8,"rpe":8},"superset":"B"},{"ex":"Pull Up","scheme":{"sets":3,"reps":8,"rpe":8},"superset":"B"},{"ex":"Face Pull","scheme":{"sets":3,"reps":15,"bw":true},"superset":"C"},{"ex":"Plank","scheme":{"sets":3,"reps":1,"hold":30},"superset":"C"}]},{"name":"Lower B","exercises":[{"ex":"Lateral Bound","scheme":{"sets":4,"reps":3,"bw":true}},{"ex":"Romanian Deadlift","scheme":{"sets":5,"reps":5,"rpe":8}},{"ex":"Step Up","scheme":{"sets":3,"reps":6,"rpe":8},"superset":"S1"},{"ex":"Nordic Curl","scheme":{"sets":3,"reps":6,"bw":true},"superset":"S1"},{"ex":"Hip Abductor","scheme":{"sets":3,"reps":15,"bw":true},"superset":"S2"},{"ex":"Side Plank","scheme":{"sets":3,"reps":1,"hold":25},"superset":"S2"}]},{"name":"Upper B","exercises":[{"ex":"Pull Up","scheme":{"sets":5,"reps":4,"repsLabel":"4-6","rpe":8},"superset":"A"},{"ex":"Incline Bench Press, Dumbbell","scheme":{"sets":4,"reps":6,"rpe":8},"superset":"A"},{"ex":"Bent Over Row","scheme":{"sets":4,"reps":6,"rpe":8},"superset":"B"},{"ex":"Shoulder Press, Dumbbell","scheme":{"sets":3,"reps":8,"rpe":8},"superset":"B"},{"ex":"Face Pull","scheme":{"sets":3,"reps":15,"bw":true},"superset":"C"},{"ex":"Bird Dog","scheme":{"sets":3,"reps":8,"bw":true},"superset":"C"}]}]},{"name":"Wk 10 · Strength","days":[{"name":"Lower A","exercises":[{"ex":"Single Leg Hop","scheme":{"sets":4,"reps":3,"bw":true}},{"ex":"Squat","scheme":{"sets":5,"reps":4,"repsLabel":"4-6","rpe":8}},{"ex":"Bulgarian Split Squat","scheme":{"sets":3,"reps":6,"rpe":8},"superset":"S1"},{"ex":"Pallof Press","scheme":{"sets":3,"reps":10,"bw":true},"superset":"S1"},{"ex":"Hip Thrust","scheme":{"sets":3,"reps":8,"rpe":8},"superset":"S2"},{"ex":"Hip Abductor","scheme":{"sets":3,"reps":15,"bw":true},"superset":"S2"}]},{"name":"Upper A","exercises":[{"ex":"Bench Press","scheme":{"sets":5,"reps":4,"repsLabel":"4-6","rpe":8},"superset":"A"},{"ex":"Dumbbell Row","scheme":{"sets":5,"reps":6,"rpe":8},"superset":"A"},{"ex":"Shoulder Press, Dumbbell","scheme":{"sets":3,"reps":8,"rpe":8},"superset":"B"},{"ex":"Pull Up","scheme":{"sets":3,"reps":8,"rpe":8},"superset":"B"},{"ex":"Face Pull","scheme":{"sets":3,"reps":15,"bw":true},"superset":"C"},{"ex":"Plank","scheme":{"sets":3,"reps":1,"hold":30},"superset":"C"}]},{"name":"Lower B","exercises":[{"ex":"Lateral Bound","scheme":{"sets":4,"reps":3,"bw":true}},{"ex":"Romanian Deadlift","scheme":{"sets":5,"reps":5,"rpe":8}},{"ex":"Step Up","scheme":{"sets":3,"reps":6,"rpe":8},"superset":"S1"},{"ex":"Nordic Curl","scheme":{"sets":3,"reps":6,"bw":true},"superset":"S1"},{"ex":"Hip Abductor","scheme":{"sets":3,"reps":15,"bw":true},"superset":"S2"},{"ex":"Side Plank","scheme":{"sets":3,"reps":1,"hold":25},"superset":"S2"}]},{"name":"Upper B","exercises":[{"ex":"Pull Up","scheme":{"sets":5,"reps":4,"repsLabel":"4-6","rpe":8},"superset":"A"},{"ex":"Incline Bench Press, Dumbbell","scheme":{"sets":4,"reps":6,"rpe":8},"superset":"A"},{"ex":"Bent Over Row","scheme":{"sets":4,"reps":6,"rpe":8},"superset":"B"},{"ex":"Shoulder Press, Dumbbell","scheme":{"sets":3,"reps":8,"rpe":8},"superset":"B"},{"ex":"Face Pull","scheme":{"sets":3,"reps":15,"bw":true},"superset":"C"},{"ex":"Bird Dog","scheme":{"sets":3,"reps":8,"bw":true},"superset":"C"}]}]},{"name":"Wk 11 · Strength","days":[{"name":"Lower A","exercises":[{"ex":"Single Leg Hop","scheme":{"sets":4,"reps":3,"bw":true}},{"ex":"Squat","scheme":{"sets":5,"reps":4,"repsLabel":"4-6","rpe":8}},{"ex":"Bulgarian Split Squat","scheme":{"sets":3,"reps":6,"rpe":8},"superset":"S1"},{"ex":"Pallof Press","scheme":{"sets":3,"reps":10,"bw":true},"superset":"S1"},{"ex":"Hip Thrust","scheme":{"sets":3,"reps":8,"rpe":8},"superset":"S2"},{"ex":"Hip Abductor","scheme":{"sets":3,"reps":15,"bw":true},"superset":"S2"}]},{"name":"Upper A","exercises":[{"ex":"Bench Press","scheme":{"sets":5,"reps":4,"repsLabel":"4-6","rpe":8},"superset":"A"},{"ex":"Dumbbell Row","scheme":{"sets":5,"reps":6,"rpe":8},"superset":"A"},{"ex":"Shoulder Press, Dumbbell","scheme":{"sets":3,"reps":8,"rpe":8},"superset":"B"},{"ex":"Pull Up","scheme":{"sets":3,"reps":8,"rpe":8},"superset":"B"},{"ex":"Face Pull","scheme":{"sets":3,"reps":15,"bw":true},"superset":"C"},{"ex":"Plank","scheme":{"sets":3,"reps":1,"hold":30},"superset":"C"}]},{"name":"Lower B","exercises":[{"ex":"Lateral Bound","scheme":{"sets":4,"reps":3,"bw":true}},{"ex":"Romanian Deadlift","scheme":{"sets":5,"reps":5,"rpe":8}},{"ex":"Step Up","scheme":{"sets":3,"reps":6,"rpe":8},"superset":"S1"},{"ex":"Nordic Curl","scheme":{"sets":3,"reps":6,"bw":true},"superset":"S1"},{"ex":"Hip Abductor","scheme":{"sets":3,"reps":15,"bw":true},"superset":"S2"},{"ex":"Side Plank","scheme":{"sets":3,"reps":1,"hold":25},"superset":"S2"}]},{"name":"Upper B","exercises":[{"ex":"Pull Up","scheme":{"sets":5,"reps":4,"repsLabel":"4-6","rpe":8},"superset":"A"},{"ex":"Incline Bench Press, Dumbbell","scheme":{"sets":4,"reps":6,"rpe":8},"superset":"A"},{"ex":"Bent Over Row","scheme":{"sets":4,"reps":6,"rpe":8},"superset":"B"},{"ex":"Shoulder Press, Dumbbell","scheme":{"sets":3,"reps":8,"rpe":8},"superset":"B"},{"ex":"Face Pull","scheme":{"sets":3,"reps":15,"bw":true},"superset":"C"},{"ex":"Bird Dog","scheme":{"sets":3,"reps":8,"bw":true},"superset":"C"}]}]},{"name":"Wk 12 · Deload","days":[{"name":"Lower A","exercises":[{"ex":"Single Leg Hop","scheme":{"sets":2,"reps":3,"bw":true}},{"ex":"Squat","scheme":{"sets":3,"reps":4,"repsLabel":"4-6","rpe":7}},{"ex":"Bulgarian Split Squat","scheme":{"sets":2,"reps":6,"rpe":7},"superset":"S1"},{"ex":"Pallof Press","scheme":{"sets":2,"reps":10,"bw":true},"superset":"S1"},{"ex":"Hip Thrust","scheme":{"sets":2,"reps":8,"rpe":7},"superset":"S2"},{"ex":"Hip Abductor","scheme":{"sets":2,"reps":15,"bw":true},"superset":"S2"}]},{"name":"Upper A","exercises":[{"ex":"Bench Press","scheme":{"sets":3,"reps":4,"repsLabel":"4-6","rpe":7},"superset":"A"},{"ex":"Dumbbell Row","scheme":{"sets":3,"reps":6,"rpe":7},"superset":"A"},{"ex":"Shoulder Press, Dumbbell","scheme":{"sets":2,"reps":8,"rpe":7},"superset":"B"},{"ex":"Pull Up","scheme":{"sets":2,"reps":8,"rpe":7},"superset":"B"},{"ex":"Face Pull","scheme":{"sets":2,"reps":15,"bw":true},"superset":"C"},{"ex":"Plank","scheme":{"sets":2,"reps":1,"hold":30},"superset":"C"}]},{"name":"Lower B","exercises":[{"ex":"Lateral Bound","scheme":{"sets":2,"reps":3,"bw":true}},{"ex":"Romanian Deadlift","scheme":{"sets":3,"reps":5,"rpe":7}},{"ex":"Step Up","scheme":{"sets":2,"reps":6,"rpe":7},"superset":"S1"},{"ex":"Nordic Curl","scheme":{"sets":2,"reps":6,"bw":true},"superset":"S1"},{"ex":"Hip Abductor","scheme":{"sets":2,"reps":15,"bw":true},"superset":"S2"},{"ex":"Side Plank","scheme":{"sets":2,"reps":1,"hold":25},"superset":"S2"}]},{"name":"Upper B","exercises":[{"ex":"Pull Up","scheme":{"sets":3,"reps":4,"repsLabel":"4-6","rpe":7},"superset":"A"},{"ex":"Incline Bench Press, Dumbbell","scheme":{"sets":2,"reps":6,"rpe":7},"superset":"A"},{"ex":"Bent Over Row","scheme":{"sets":2,"reps":6,"rpe":7},"superset":"B"},{"ex":"Shoulder Press, Dumbbell","scheme":{"sets":2,"reps":8,"rpe":7},"superset":"B"},{"ex":"Face Pull","scheme":{"sets":2,"reps":15,"bw":true},"superset":"C"},{"ex":"Bird Dog","scheme":{"sets":2,"reps":8,"bw":true},"superset":"C"}]}]},{"name":"Wk 13 · Power","days":[{"name":"Lower A","exercises":[{"ex":"Squat","scheme":{"sets":4,"reps":3,"rpe":8},"superset":"P1"},{"ex":"Box Jump","scheme":{"sets":4,"reps":3,"bw":true},"superset":"P1"},{"ex":"Jump Squat","scheme":{"sets":3,"reps":5,"bw":true}},{"ex":"Single Leg Deadlift","scheme":{"sets":3,"reps":6,"rpe":8},"superset":"S1"},{"ex":"Hip Abductor","scheme":{"sets":3,"reps":12,"bw":true},"superset":"S1"},{"ex":"Pallof Press","scheme":{"sets":2,"reps":10,"bw":true}}]},{"name":"Upper A","exercises":[{"ex":"Bench Press","scheme":{"sets":4,"reps":3,"rpe":8},"superset":"P1"},{"ex":"Explosive Push Up","scheme":{"sets":4,"reps":5,"bw":true},"superset":"P1"},{"ex":"Shoulder Press, Dumbbell","scheme":{"sets":3,"reps":5,"rpe":8},"superset":"B"},{"ex":"Dumbbell Row","scheme":{"sets":3,"reps":6,"rpe":8},"superset":"B"},{"ex":"Pull Up","scheme":{"sets":3,"reps":5,"rpe":8},"superset":"C"},{"ex":"Face Pull","scheme":{"sets":3,"reps":15,"bw":true},"superset":"C"}]},{"name":"Lower B","exercises":[{"ex":"Romanian Deadlift","scheme":{"sets":4,"reps":4,"rpe":8},"superset":"P1"},{"ex":"Broad Jump","scheme":{"sets":4,"reps":3,"bw":true},"superset":"P1"},{"ex":"Lateral Bound","scheme":{"sets":3,"reps":4,"bw":true}},{"ex":"Deceleration Drill","scheme":{"sets":4,"reps":1,"bw":true}},{"ex":"Cutting Drill","scheme":{"sets":3,"reps":4,"bw":true}},{"ex":"Nordic Curl","scheme":{"sets":3,"reps":6,"bw":true},"superset":"S1"},{"ex":"Side Plank","scheme":{"sets":2,"reps":1,"hold":25},"superset":"S1"}]},{"name":"Upper B","exercises":[{"ex":"Pull Up","scheme":{"sets":4,"reps":4,"repsLabel":"4-6","rpe":8},"superset":"A"},{"ex":"Incline Bench Press, Dumbbell","scheme":{"sets":4,"reps":6,"rpe":8},"superset":"A"},{"ex":"Bent Over Row","scheme":{"sets":4,"reps":5,"rpe":8},"superset":"B"},{"ex":"Shoulder Press, Dumbbell","scheme":{"sets":3,"reps":5,"rpe":8},"superset":"B"},{"ex":"Face Pull","scheme":{"sets":3,"reps":15,"bw":true},"superset":"C"},{"ex":"Cable Woodchopper","scheme":{"sets":2,"reps":10,"bw":true},"superset":"C"}]}]},{"name":"Wk 14 · Power","days":[{"name":"Lower A","exercises":[{"ex":"Squat","scheme":{"sets":4,"reps":3,"rpe":8},"superset":"P1"},{"ex":"Box Jump","scheme":{"sets":4,"reps":3,"bw":true},"superset":"P1"},{"ex":"Jump Squat","scheme":{"sets":3,"reps":5,"bw":true}},{"ex":"Single Leg Deadlift","scheme":{"sets":3,"reps":6,"rpe":8},"superset":"S1"},{"ex":"Hip Abductor","scheme":{"sets":3,"reps":12,"bw":true},"superset":"S1"},{"ex":"Pallof Press","scheme":{"sets":2,"reps":10,"bw":true}}]},{"name":"Upper A","exercises":[{"ex":"Bench Press","scheme":{"sets":4,"reps":3,"rpe":8},"superset":"P1"},{"ex":"Explosive Push Up","scheme":{"sets":4,"reps":5,"bw":true},"superset":"P1"},{"ex":"Shoulder Press, Dumbbell","scheme":{"sets":3,"reps":5,"rpe":8},"superset":"B"},{"ex":"Dumbbell Row","scheme":{"sets":3,"reps":6,"rpe":8},"superset":"B"},{"ex":"Pull Up","scheme":{"sets":3,"reps":5,"rpe":8},"superset":"C"},{"ex":"Face Pull","scheme":{"sets":3,"reps":15,"bw":true},"superset":"C"}]},{"name":"Lower B","exercises":[{"ex":"Romanian Deadlift","scheme":{"sets":4,"reps":4,"rpe":8},"superset":"P1"},{"ex":"Broad Jump","scheme":{"sets":4,"reps":3,"bw":true},"superset":"P1"},{"ex":"Lateral Bound","scheme":{"sets":3,"reps":4,"bw":true}},{"ex":"Deceleration Drill","scheme":{"sets":4,"reps":1,"bw":true}},{"ex":"Cutting Drill","scheme":{"sets":3,"reps":4,"bw":true}},{"ex":"Nordic Curl","scheme":{"sets":3,"reps":6,"bw":true},"superset":"S1"},{"ex":"Side Plank","scheme":{"sets":2,"reps":1,"hold":25},"superset":"S1"}]},{"name":"Upper B","exercises":[{"ex":"Pull Up","scheme":{"sets":4,"reps":4,"repsLabel":"4-6","rpe":8},"superset":"A"},{"ex":"Incline Bench Press, Dumbbell","scheme":{"sets":4,"reps":6,"rpe":8},"superset":"A"},{"ex":"Bent Over Row","scheme":{"sets":4,"reps":5,"rpe":8},"superset":"B"},{"ex":"Shoulder Press, Dumbbell","scheme":{"sets":3,"reps":5,"rpe":8},"superset":"B"},{"ex":"Face Pull","scheme":{"sets":3,"reps":15,"bw":true},"superset":"C"},{"ex":"Cable Woodchopper","scheme":{"sets":2,"reps":10,"bw":true},"superset":"C"}]}]},{"name":"Wk 15 · Power","days":[{"name":"Lower A","exercises":[{"ex":"Squat","scheme":{"sets":4,"reps":3,"rpe":8},"superset":"P1"},{"ex":"Box Jump","scheme":{"sets":4,"reps":3,"bw":true},"superset":"P1"},{"ex":"Jump Squat","scheme":{"sets":3,"reps":5,"bw":true}},{"ex":"Single Leg Deadlift","scheme":{"sets":3,"reps":6,"rpe":8},"superset":"S1"},{"ex":"Hip Abductor","scheme":{"sets":3,"reps":12,"bw":true},"superset":"S1"},{"ex":"Pallof Press","scheme":{"sets":2,"reps":10,"bw":true}}]},{"name":"Upper A","exercises":[{"ex":"Bench Press","scheme":{"sets":4,"reps":3,"rpe":8},"superset":"P1"},{"ex":"Explosive Push Up","scheme":{"sets":4,"reps":5,"bw":true},"superset":"P1"},{"ex":"Shoulder Press, Dumbbell","scheme":{"sets":3,"reps":5,"rpe":8},"superset":"B"},{"ex":"Dumbbell Row","scheme":{"sets":3,"reps":6,"rpe":8},"superset":"B"},{"ex":"Pull Up","scheme":{"sets":3,"reps":5,"rpe":8},"superset":"C"},{"ex":"Face Pull","scheme":{"sets":3,"reps":15,"bw":true},"superset":"C"}]},{"name":"Lower B","exercises":[{"ex":"Romanian Deadlift","scheme":{"sets":4,"reps":4,"rpe":8},"superset":"P1"},{"ex":"Broad Jump","scheme":{"sets":4,"reps":3,"bw":true},"superset":"P1"},{"ex":"Lateral Bound","scheme":{"sets":3,"reps":4,"bw":true}},{"ex":"Deceleration Drill","scheme":{"sets":4,"reps":1,"bw":true}},{"ex":"Cutting Drill","scheme":{"sets":3,"reps":4,"bw":true}},{"ex":"Nordic Curl","scheme":{"sets":3,"reps":6,"bw":true},"superset":"S1"},{"ex":"Side Plank","scheme":{"sets":2,"reps":1,"hold":25},"superset":"S1"}]},{"name":"Upper B","exercises":[{"ex":"Pull Up","scheme":{"sets":4,"reps":4,"repsLabel":"4-6","rpe":8},"superset":"A"},{"ex":"Incline Bench Press, Dumbbell","scheme":{"sets":4,"reps":6,"rpe":8},"superset":"A"},{"ex":"Bent Over Row","scheme":{"sets":4,"reps":5,"rpe":8},"superset":"B"},{"ex":"Shoulder Press, Dumbbell","scheme":{"sets":3,"reps":5,"rpe":8},"superset":"B"},{"ex":"Face Pull","scheme":{"sets":3,"reps":15,"bw":true},"superset":"C"},{"ex":"Cable Woodchopper","scheme":{"sets":2,"reps":10,"bw":true},"superset":"C"}]}]},{"name":"Wk 16 · Taper","days":[{"name":"Lower A","exercises":[{"ex":"Squat","scheme":{"sets":2,"reps":3,"rpe":7},"superset":"P1"},{"ex":"Box Jump","scheme":{"sets":2,"reps":3,"bw":true},"superset":"P1"},{"ex":"Jump Squat","scheme":{"sets":2,"reps":5,"bw":true}},{"ex":"Single Leg Deadlift","scheme":{"sets":2,"reps":6,"rpe":7},"superset":"S1"},{"ex":"Hip Abductor","scheme":{"sets":2,"reps":12,"bw":true},"superset":"S1"},{"ex":"Pallof Press","scheme":{"sets":2,"reps":10,"bw":true}}]},{"name":"Upper A","exercises":[{"ex":"Bench Press","scheme":{"sets":2,"reps":3,"rpe":7},"superset":"P1"},{"ex":"Explosive Push Up","scheme":{"sets":2,"reps":5,"bw":true},"superset":"P1"},{"ex":"Shoulder Press, Dumbbell","scheme":{"sets":2,"reps":5,"rpe":7},"superset":"B"},{"ex":"Dumbbell Row","scheme":{"sets":2,"reps":6,"rpe":7},"superset":"B"},{"ex":"Pull Up","scheme":{"sets":2,"reps":5,"rpe":7},"superset":"C"},{"ex":"Face Pull","scheme":{"sets":2,"reps":15,"bw":true},"superset":"C"}]},{"name":"Lower B","exercises":[{"ex":"Romanian Deadlift","scheme":{"sets":2,"reps":4,"rpe":7},"superset":"P1"},{"ex":"Broad Jump","scheme":{"sets":2,"reps":3,"bw":true},"superset":"P1"},{"ex":"Lateral Bound","scheme":{"sets":2,"reps":4,"bw":true}},{"ex":"Deceleration Drill","scheme":{"sets":2,"reps":1,"bw":true}},{"ex":"Cutting Drill","scheme":{"sets":2,"reps":4,"bw":true}},{"ex":"Nordic Curl","scheme":{"sets":2,"reps":6,"bw":true},"superset":"S1"},{"ex":"Side Plank","scheme":{"sets":2,"reps":1,"hold":25},"superset":"S1"}]},{"name":"Upper B","exercises":[{"ex":"Pull Up","scheme":{"sets":2,"reps":4,"repsLabel":"4-6","rpe":7},"superset":"A"},{"ex":"Incline Bench Press, Dumbbell","scheme":{"sets":2,"reps":6,"rpe":7},"superset":"A"},{"ex":"Bent Over Row","scheme":{"sets":2,"reps":5,"rpe":7},"superset":"B"},{"ex":"Shoulder Press, Dumbbell","scheme":{"sets":2,"reps":5,"rpe":7},"superset":"B"},{"ex":"Face Pull","scheme":{"sets":2,"reps":15,"bw":true},"superset":"C"},{"ex":"Cable Woodchopper","scheme":{"sets":2,"reps":10,"bw":true},"superset":"C"}]}]}]};
+
 // ── State ─────────────────────────────────────────────────────────────────────
 let sections, exercises, sessions, prs, draft, templates, settings;
 let programs, programState, exMeta;   // programs, {programId,dayIndex}, per-exercise {weight,inc,fails}
@@ -1118,9 +1135,9 @@ function switchTab(tab) {
 let rt = {active:false, total:90, rem:0, interval:null, ex:'', setInfo:''};
 const CIRCUM = 2 * Math.PI * 88; // 552.9
 
-function startRest(ex, setInfo) {
+function startRest(ex, setInfo, dur) {
   if(rt.interval) clearInterval(rt.interval);
-  rt.total = settings.rest||90;
+  rt.total = dur || settings.rest || 90;
   rt.rem   = rt.total;
   rt.ex    = ex;
   rt.setInfo = setInfo;
@@ -1198,11 +1215,24 @@ function buildLog() {
     `<button class="log-btn" onclick="logWorkout()">LOG WORKOUT</button>`;
   document.getElementById('sec-pills').innerHTML = '';
   const body = document.getElementById('log-body');
-  body.innerHTML = '<div class="log-list">' + workoutPlan.map(ex=>{
+  const cardWrap = ex => {
     const sec = sections.find(s=>(exercises[s]||[]).includes(ex)) || '';
     const secCls = (SEC_CLS[sec]||'custom')+'-section';
     return `<div class="${secCls}">${buildCard(sec, ex)}</div>`;
-  }).join('') + '</div>';
+  };
+  // Render consecutive same-superset exercises inside a labelled group.
+  let html='<div class="log-list">'; let i=0;
+  while(i<workoutPlan.length){
+    const ss = draft[workoutPlan[i]] && draft[workoutPlan[i]].superset;
+    if(ss){
+      const group=[];
+      while(i<workoutPlan.length && draft[workoutPlan[i]] && draft[workoutPlan[i]].superset===ss){ group.push(workoutPlan[i]); i++; }
+      html+=`<div class="superset-group"><div class="superset-lbl">⇄ Superset ${ss} · alternate sets, short rest</div>`
+        + group.map(cardWrap).join('') + `</div>`;
+    } else { html+=cardWrap(workoutPlan[i]); i++; }
+  }
+  html+='</div>';
+  body.innerHTML=html;
   calcAll();
   renderStreakBar();
   updatePlanBanner();
@@ -1333,16 +1363,29 @@ function buildCard(sec, ex) {
       ? `<div class="set-check ${s.done?'done':''}" id="chk-${ke}-${i}" onclick="toggleDone('${ex}',${i})"
            style="flex-direction:column;gap:0"><span style="font-size:8px;font-weight:700;color:var(--gold);line-height:1">W</span>${s.done?'✓':'○'}</div>`
       : `<div class="set-check ${s.done?'done':''}" id="chk-${ke}-${i}" onclick="toggleDone('${ex}',${i})">${s.done ? '✓' : '○'}</div>`;
-    const target = (!s.warm && s.tr) ? `<div class="set-target">target ${s.tw?s.tw+' × ':''}${s.tr}${s.amrap?'<span class="amrap-badge">AMRAP</span>':''}</div>` : '';
-    rows += `<div class="set-row ${doneCls} ${s.warm?'warm':''}" id="sr-${ke}-${i}">
+    // Left (weight) cell: a "hold" label for timed sets, otherwise a weight input.
+    const wCell = s.hold
+      ? `<div class="set-hold-lbl">hold</div>`
+      : `<input type="number" inputmode="decimal" placeholder="${s.warm?'warm':s.noload?'opt':(bw?settings.bw+' bw':U())}"
+          class="set-input" value="${s.w}" data-ex="${ex}" data-set="${i}" data-t="w" oninput="onInput(this)">`;
+    const rPlaceholder = s.hold ? 'secs' : s.amrap ? 'AMRAP' : 'reps';
+    // Target hint: hold seconds, or reps (+range) (+RPE) (+AMRAP).
+    let target='';
+    if(!s.warm){
+      if(s.hold) target=`hold ${s.hold}s`;
+      else if(s.tr){
+        target='target '+(s.tw?s.tw+' × ':'')+(s.repsLabel||s.tr)
+          +(s.rpe?` <span class="rpe-badge">@${s.rpe}</span>`:'')
+          +(s.amrap?'<span class="amrap-badge">AMRAP</span>':'');
+      }
+    }
+    rows += `<div class="set-row ${doneCls} ${s.warm?'warm':''} ${s.hold?'hold':''}" id="sr-${ke}-${i}">
       ${check}
-      <input type="number" inputmode="decimal" placeholder="${s.warm?'warm':(bw?settings.bw+' bw':U())}"
-        class="set-input" value="${s.w}"
-        data-ex="${ex}" data-set="${i}" data-t="w" oninput="onInput(this)">
-      <input type="number" inputmode="numeric" placeholder="${s.amrap?'AMRAP':'reps'}"
+      ${wCell}
+      <input type="number" inputmode="numeric" placeholder="${rPlaceholder}"
         class="set-input" value="${s.r}"
         data-ex="${ex}" data-set="${i}" data-t="r" oninput="onInput(this)">
-      ${target}
+      ${target?`<div class="set-target">${target}</div>`:''}
     </div>`;
   }
   const hasNotes = d.notes && d.notes.trim();
@@ -1350,11 +1393,22 @@ function buildCard(sec, ex) {
   const allDone = filled.length>0 && filled.every(s=>s.done);
   const cardCls = 'ex-card' + (allDone ? ' all-done collapsed' : '');
   const meta = exMeta[ex];
-  const prescribeNote = d.prescribed && meta && meta.weight>0
-    ? `<div class="prescribe-note">Prescribed: working weight ${fmtW(meta.weight)}</div>` : '';
+  let prescribeNote='';
+  if(d.prescribed){
+    if(d.scheme && (d.scheme.rpe || d.scheme.bw || d.scheme.hold)){
+      const parts=[schemeLabel(d.scheme)];
+      if(d.scheme.rpe) parts.push('leave '+(10-d.scheme.rpe)+' in reserve');
+      else if(d.scheme.hold) parts.push('timed hold');
+      else parts.push('bodyweight');
+      prescribeNote=`<div class="prescribe-note">Prescribed: ${parts.join(' · ')}</div>`;
+    } else if(meta && meta.weight>0){
+      prescribeNote=`<div class="prescribe-note">Prescribed: working weight ${fmtW(meta.weight)}</div>`;
+    }
+  }
+  const ssBadge = d.superset ? `<span class="ss-badge">⇄ ${d.superset}</span>` : '';
   return `<div class="${cardCls}" id="ec-${ke}">
     <div class="ex-card-hdr" onclick="toggleCollapse('${ex}')">
-      <div class="ex-name">${ex}</div>
+      <div class="ex-name">${ex}${ssBadge}</div>
       <button class="expand-btn" onclick="event.stopPropagation();toggleCollapse('${ex}')">▾</button>
       <button class="qfill-btn" onclick="event.stopPropagation();quickFill('${ex}')">↺</button>
       <button class="notes-toggle ${hasNotes?'has-notes':''}" id="ntog-${ke}"
@@ -1490,9 +1544,14 @@ function toggleDone(ex, i) {
   checkCardDone(ex);
   updateCardSummary(ex);
   if(d.sets[i].done) {
-    const w=parseFloat(d.sets[i].w)||0, r=parseFloat(d.sets[i].r)||0;
-    const info = w>0 ? `Set ${i+1}: ${w} ${U()} × ${r}` : `Set ${i+1}: ${r} reps (BW)`;
-    startRest(ex, info);
+    const st=d.sets[i];
+    const w=parseFloat(st.w)||0, r=parseFloat(st.r)||0;
+    let info;
+    if(st.hold) info = `Set ${i+1}: ${r||st.hold}s hold`;
+    else info = w>0 ? `Set ${i+1}: ${w} ${U()} × ${r}` : `Set ${i+1}: ${r} reps${st.noload?'':' (BW)'}`;
+    // Supersets alternate with short rest between paired lifts.
+    const dur = d.superset ? 45 : (settings.rest||90);
+    startRest(ex, info, dur);
   }
 }
 
@@ -1514,7 +1573,7 @@ function calcCard(ex) {
   let vol=0,maxOrm=0,totalReps=0,maxReps=0;
   const bw=settings.bw||0;
   d.sets.forEach(s=>{
-    if(s.warm) return;
+    if(s.warm||s.hold||s.noload) return;   // warm-ups, timed holds & plyos don't count
     const wv=parseFloat(s.w)||0, rv=parseFloat(s.r)||0;
     if(rv>0){ totalReps+=rv; if(rv>maxReps) maxReps=rv; }
     const ew = wv>0?wv:(bw>0?bw:0);
@@ -1525,7 +1584,7 @@ function calcCard(ex) {
   const oEl=document.getElementById('eorm-'+ke);
   const prEl=document.getElementById('prtag-'+ke);
   if(!vEl) return;
-  const hasW = d.sets.some(s=>!s.warm&&parseFloat(s.w)>0)||(bw>0&&totalReps>0);
+  const hasW = d.sets.some(s=>!s.warm&&!s.hold&&!s.noload&&parseFloat(s.w)>0)||(bw>0&&totalReps>0);
   if(!totalReps){ vEl.textContent='—'; oEl.textContent='—'; }
   else if(!hasW){ vEl.textContent=totalReps+' reps'; oEl.textContent='BW'; }
   else { vEl.textContent=vol>0?vol.toLocaleString()+' '+U():'—'; oEl.textContent=maxOrm>0?maxOrm.toFixed(1):'—'; }
@@ -1544,10 +1603,15 @@ function logWorkout() {
       if(!hasReps) return;
       hasAny=true;
       const bw=settings.bw||0;
-      const sets=workSets.map(({w,r,done})=>({w:parseFloat(w)||0,r:parseFloat(r)||0,done}));
+      const sets=workSets.map(({w,r,done,hold,noload})=>{
+        const o={w:parseFloat(w)||0,r:parseFloat(r)||0,done};
+        if(hold) o.hold=hold; if(noload) o.noload=true;
+        return o;
+      });
       let vol=0,maxOrm=0,totalReps=0,maxReps=0;
-      sets.forEach(({w,r})=>{
-        const rv=r||0, ew=w>0?w:(bw>0?bw:0);
+      sets.forEach(s=>{
+        if(s.hold||s.noload) return;   // holds & plyos don't add volume/1RM
+        const rv=s.r||0, ew=s.w>0?s.w:(bw>0?bw:0);
         if(rv>0){totalReps+=rv;if(rv>maxReps)maxReps=rv;}
         if(ew>0&&rv>0){vol+=ew*rv;const o=ew*(1+rv/30);if(o>maxOrm)maxOrm=o;}
       });
@@ -1596,7 +1660,7 @@ function renderHistory(){
       const ds=dt.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
       const prc=(s.prs||[]).length;
       let exRows=(s.exercises||[]).map(e=>{
-        const setsStr=(e.sets||[]).filter(st=>st.r>0).map(st=>st.w>0?`${st.w}×${st.r}`:`BW×${st.r}`).join(' ');
+        const setsStr=(e.sets||[]).filter(st=>st.r>0).map(st=>st.hold?`${st.r}s`:st.w>0?`${st.w}×${st.r}`:`BW×${st.r}`).join(' ');
         const isPR=(s.prs||[]).includes(e.ex);
         const col=ACCENT[SEC_CLS[e.sec]||'custom'];
         return `<div class="sess-ex">
@@ -2002,7 +2066,17 @@ function deleteTemplate(id){
 function currentProgram(){ return programState ? (programs||[]).find(p=>p.id===programState.programId) : null; }
 function schemeLabel(sc){
   if(sc.setList) return sc.setList.map(s=>s.reps+(s.amrap?'+':'')).join('/');
-  return `${sc.sets}×${sc.reps}${sc.amrap?'+':''}`;
+  if(sc.hold) return `${sc.sets}×${sc.hold}s`;
+  const reps = sc.repsLabel || sc.reps;
+  return `${sc.sets}×${reps}${sc.amrap?'+':''}${sc.rpe?' @'+sc.rpe:''}`;
+}
+// Most recent logged top-set weight for an exercise (used for RPE carry-forward).
+function lastWeightFor(ex){
+  for(const s of (sessions||[])){
+    const e=(s.exercises||[]).find(e=>e.ex===ex);
+    if(e){ const w=Math.max(0,...(e.sets||[]).map(st=>st.w||0)); if(w>0) return w; }
+  }
+  return '';
 }
 
 // ── Program shape helpers (support both flat `days` and `weeks`) ──────────────
@@ -2033,6 +2107,8 @@ function topSetLabel(de){
     if(m&&m.weight>0) return `${roundLoadable(m.weight*top.pct/100)} ${U()}×${top.reps}${top.amrap?'+':''}`;
     return `${top.pct}%×${top.reps}${top.amrap?'+':''}`;
   }
+  if(sc.hold) return `${sc.sets}×${sc.hold}s`;
+  if(sc.rpe||sc.bw) return schemeLabel(sc);
   if(m&&m.weight>0) return `${m.weight} ${U()}×${sc.reps}`;
   return `${sc.sets}×${sc.reps}`;
 }
@@ -2064,7 +2140,7 @@ function build531(){
   };
 }
 // Fresh copies of all built-ins (deep-cloned linear ones + the generated 5/3/1).
-function builtinPrograms(){ return [...JSON.parse(JSON.stringify(BUILTIN_PROGRAMS)), build531()]; }
+function builtinPrograms(){ return [...JSON.parse(JSON.stringify(BUILTIN_PROGRAMS)), build531(), JSON.parse(JSON.stringify(CALLIE_PROGRAM))]; }
 
 // Make sure a program's exercise exists in the section list so it shows up
 // everywhere (log, history, progress). Adds it to the program's home section.
@@ -2092,7 +2168,7 @@ function renderProgramsModal(){
       </div>
     </div>
     <div style="display:flex;gap:8px;margin:6px 0 16px">
-      <button class="prog-act-btn" style="flex:1" onclick="renderProgramSetup('${active.id}')">Edit ${active.tmBased?'training maxes':'weights'}</button>
+      <button class="prog-act-btn" style="flex:1" onclick="renderProgramSetup('${active.id}')">${active.tmBased?'Edit training maxes':active.mode==='rpe'?'Program details':'Edit weights'}</button>
       <button class="prog-act-btn ghost" style="flex:1" onclick="deactivateProgram()">Stop program</button>
     </div>`;
     if(active.weeks){
@@ -2124,7 +2200,7 @@ function renderProgramsModal(){
   (programs||[]).forEach(p=>{
     if(active && p.id===active.id) return;
     const desc = p.weeks
-      ? `${p.weeks.length}-week wave · ${programExercises(p).length} lifts · training-max based`
+      ? `${p.weeks.length}-week program · ${programExercises(p).length} exercises · ${p.mode==='rpe'?'RPE-autoregulated':'training-max based'}`
       : `${p.days.length} day rotation · ${p.days.map(d=>d.name).join(', ')}`;
     html+=`<div class="prog-card">
       <div class="prog-info">
@@ -2155,6 +2231,16 @@ function activateProgram(id){
 function renderProgramSetup(id){
   const p=(programs||[]).find(p=>p.id===id); if(!p) return;
   const body=document.getElementById('prog-modal-body');
+  // Autoregulated (RPE) programs prescribe reps + RPE, not weight — nothing to set up.
+  if(p.mode==='rpe'){
+    body.innerHTML=`<div class="prog-day-preview" style="padding-bottom:14px;line-height:1.6">
+      This program is <b>autoregulated by RPE / reps-in-reserve</b>, so there are no fixed
+      starting weights to enter. Each session prescribes the sets, rep target and RPE —
+      you pick a weight that leaves the listed reps in the tank, and the app carries it
+      forward next time. Supersets, holds and plyometrics are all built in.</div>
+      <button class="tmpl-save-btn" onclick="saveProgramSetup('${id}')">Start Program</button>`;
+    return;
+  }
   const list=programExercises(p);
   const tm=p.tmBased;
   let html=`<div class="prog-day-preview" style="padding-bottom:10px">
@@ -2202,9 +2288,11 @@ function setProgramDay(di, wi){
   if(!workoutPlan) buildLog();
 }
 
-// Pre-fill an exercise's draft with its prescribed sets (target weight + reps).
-// Linear schemes use exMeta.weight directly; %-schemes resolve each set off the TM.
-function prescribeDraft(ex, scheme){
+// Pre-fill an exercise's draft with its prescribed sets. Handles four scheme
+// shapes: %-of-TM (setList), timed holds, RPE/bodyweight (autoregulated, no
+// fixed load), and plain linear (fixed working weight).
+function prescribeDraft(ex, scheme, opts){
+  opts=opts||{};
   const m=exMeta[ex]||{weight:0};
   let defs;
   if(scheme.setList){
@@ -2212,14 +2300,26 @@ function prescribeDraft(ex, scheme){
       const w = m.weight>0 ? roundLoadable(m.weight*s.pct/100) : '';
       return { w, r:s.reps, done:false, tw:(w||0), tr:s.reps, amrap:!!s.amrap };
     });
+  } else if(scheme.hold){
+    // Timed hold (planks): the reps field holds seconds; no external load.
+    defs=Array.from({length:scheme.sets},()=>({
+      w:'', r:scheme.hold, done:false, hold:scheme.hold, noload:true, tr:0 }));
+  } else if(scheme.rpe || scheme.bw){
+    // Autoregulated by RPE, or a bodyweight/plyo move — no prescribed load.
+    // RPE lifts carry the last weight you used forward as a starting point.
+    const carried = scheme.rpe ? lastWeightFor(ex) : '';
+    defs=Array.from({length:scheme.sets},()=>({
+      w:carried||'', r:scheme.reps, done:false, tw:0, tr:scheme.reps,
+      repsLabel:scheme.repsLabel||null, rpe:scheme.rpe||null, noload:!!scheme.bw }));
   } else {
     const w=m.weight>0?m.weight:'';
     defs=Array.from({length:scheme.sets},(_,i)=>({
       w, r:scheme.reps, done:false, tw:(m.weight>0?m.weight:0), tr:scheme.reps,
+      repsLabel:scheme.repsLabel||null,
       amrap:!!(scheme.amrap && i===scheme.sets-1)
     }));
   }
-  draft[ex]={ notes:'', prescribed:true, scheme, sets:defs };
+  draft[ex]={ notes:'', prescribed:true, scheme, superset:opts.superset||null, sets:defs };
 }
 
 // Start the current program day → build the plan, prescribe every lift.
@@ -2227,11 +2327,11 @@ function startProgramDay(){
   const p=currentProgram(); if(!p){ showToast('No active program'); return; }
   const wi=programState.weekIndex||0, di=programState.dayIndex||0;
   const day=getProgramDay(p, programState);
-  const needSetup=day.exercises.some(de=>!exMeta[de.ex]||!(exMeta[de.ex].weight>0));
+  const needSetup=p.mode!=='rpe' && day.exercises.some(de=>!exMeta[de.ex]||!(exMeta[de.ex].weight>0));
   day.exercises.forEach(de=>{
     ensureExercise(de.ex, p.section);
     if(!exMeta[de.ex]) exMeta[de.ex]={weight:(de.start&&de.start[U()])||0,inc:(de.inc&&de.inc[U()])||minStep(),fails:0};
-    prescribeDraft(de.ex, de.scheme);
+    prescribeDraft(de.ex, de.scheme, {superset:de.superset});
   });
   workoutPlan=day.exercises.map(de=>de.ex);
   workoutProgram={programId:p.id,weekIndex:wi,dayIndex:di,dayName:dayLabel(p,programState)};
@@ -2248,6 +2348,17 @@ function applyProgression(){
   const day=getProgramDay(p, workoutProgram);
   if(!day) return [];
   const msgs=[];
+
+  if(p.mode==='rpe'){
+    // Autoregulated: nothing to compute — just advance through the weeks/days.
+    let wi=workoutProgram.weekIndex||0, di=workoutProgram.dayIndex||0, cycleEnd=false;
+    di++;
+    if(di>=p.weeks[wi].days.length){ di=0; wi++; if(wi>=p.weeks.length){ wi=0; cycleEnd=true; } }
+    programState.weekIndex=wi; programState.dayIndex=di;
+    msgs.push({ex:'📋 '+p.name, kind:'hold',
+      txt: cycleEnd ? 'program complete — nice work! 🎉' : `up next: ${dayLabel(p, programState)}`});
+    return msgs;
+  }
 
   if(p.tmBased){
     // Training-max programs (5/3/1): report the AMRAP top set, keep the TM until
@@ -2570,7 +2681,7 @@ function showSessionSummary(rows, newPRs, totalVol, progMsgs) {
     `<div class="summary-ex-title">Exercises Completed</div>` +
     rows.map(r => {
       const setsStr = (r.sets || []).filter(s => s.r > 0)
-        .map(s => s.w > 0 ? `${s.w}×${s.r}` : `BW×${s.r}`).join('  ');
+        .map(s => s.hold ? `${s.r}s` : s.w > 0 ? `${s.w}×${s.r}` : `BW×${s.r}`).join('  ');
       return `<div class="summary-ex-item">
         <div class="summary-ex-check">✓</div>
         <div class="summary-ex-name">${r.ex}</div>
@@ -2657,7 +2768,7 @@ function updateCardSummary(ex) {
   if (!sumEl) return;
   const d = getDraft(ex);
   const sets = d.sets.filter(s => !s.warm && parseFloat(s.r) > 0);
-  const setsStr = sets.map(s => s.w > 0 ? `${s.w}×${s.r}` : `BW×${s.r}`).join('  ');
+  const setsStr = sets.map(s => s.hold ? `${s.r}s` : s.w > 0 ? `${s.w}×${s.r}` : `BW×${s.r}`).join('  ');
   const volEl = document.getElementById('evol-' + ke);
   const vol = volEl ? volEl.textContent : '';
   sumEl.textContent = setsStr + (vol && vol !== '—' ? '  ·  ' + vol : '');
