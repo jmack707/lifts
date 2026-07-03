@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1C1C26"/>
+      <stop offset="100%" stop-color="#0A0A0F"/>
+    </linearGradient>
+    <linearGradient id="bar" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#4A9EE0"/>
+      <stop offset="50%" stop-color="#3EC878"/>
+      <stop offset="100%" stop-color="#F0C040"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <!-- Barbell -->
+  <g transform="translate(256,256)">
+    <!-- bar -->
+    <rect x="-150" y="-14" width="300" height="28" rx="14" fill="url(#bar)"/>
+    <!-- inner plates -->
+    <rect x="-120" y="-52" width="34" height="104" rx="10" fill="#4A9EE0"/>
+    <rect x="86" y="-52" width="34" height="104" rx="10" fill="#F0C040"/>
+    <!-- outer plates -->
+    <rect x="-156" y="-40" width="30" height="80" rx="9" fill="#3EC878"/>
+    <rect x="126" y="-40" width="30" height="80" rx="9" fill="#E05252"/>
+  </g>
+  <!-- Wordmark -->
+  <text x="256" y="410" font-family="Arial, sans-serif" font-size="72" font-weight="800"
+    fill="#F0F0F8" text-anchor="middle" letter-spacing="4">LIFTS</text>
+</svg>
