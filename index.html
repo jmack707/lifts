@@ -1293,8 +1293,19 @@ function vibrate(){ try{navigator.vibrate&&navigator.vibrate([200,100,200]);}cat
 // ════════════════════════════════════════════════════════════════
 // LOG TAB
 // ════════════════════════════════════════════════════════════════
+// The first tab is Home (dashboard) when idle, but becomes Workout while one
+// is in progress — so you tap "Workout", not "Home", to get back and save.
+function updateHomeNav(){
+  const ic=document.querySelector('#nb-log .nav-icon');
+  const lb=document.querySelector('#nb-log .nav-lbl');
+  if(!ic||!lb) return;
+  ic.textContent = workoutPlan ? '🏋️' : '🏠';
+  lb.textContent = workoutPlan ? 'Workout' : 'Home';
+}
+
 function buildLog() {
   const logAction = document.getElementById('log-action');
+  updateHomeNav();
   // ── No active workout → show the Start screen ──
   if(!workoutPlan){
     document.getElementById('sec-pills').innerHTML = '';
