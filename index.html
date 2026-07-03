@@ -328,6 +328,47 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);
 .wip-save:active,.wip-resume:active{filter:brightness(1.15);}
 body.wip .page.active{padding-bottom:60px;}
 
+/* ── Exercise library ── */
+.lib-filters{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:10px;}
+.lib-filters::-webkit-scrollbar{display:none;}
+.lib-chip{flex:0 0 auto;padding:6px 12px;border-radius:16px;font-size:11px;font-weight:700;
+  border:1px solid var(--border);background:var(--s2);color:var(--muted);cursor:pointer;text-transform:capitalize;white-space:nowrap;}
+.lib-chip.on{background:var(--purple);color:#fff;border-color:transparent;}
+.lib-count{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;padding:2px 2px 8px;}
+.lib-row{display:flex;align-items:center;gap:9px;padding:10px 2px;border-bottom:1px solid var(--border2);}
+.lib-info{flex:1;min-width:0;}
+.lib-name{font-size:13px;font-weight:600;text-transform:capitalize;}
+.lib-meta{font-size:11px;color:var(--muted);margin-top:2px;text-transform:capitalize;}
+.lib-i{background:var(--s2);border:1px solid var(--border);border-radius:8px;color:var(--muted);
+  font-size:13px;width:34px;height:34px;cursor:pointer;flex-shrink:0;}
+.lib-add{background:var(--purple);border:none;border-radius:8px;color:#fff;font-size:12px;font-weight:700;
+  padding:8px 12px;cursor:pointer;flex-shrink:0;}
+.lib-add.added{background:rgba(62,200,120,.16);color:var(--lower);}
+.lib-credit{font-size:10px;color:var(--muted2);line-height:1.5;padding-top:14px;margin-top:8px;border-top:1px solid var(--border);}
+.lib-empty{color:var(--muted);font-family:'DM Mono',monospace;font-size:12px;text-align:center;padding:24px 0;}
+/* Exercise info sheet */
+.exinfo-name{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:.03em;text-transform:capitalize;line-height:1.1;}
+.exinfo-tags{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 4px;}
+.exinfo-tag{font-size:11px;font-weight:700;padding:4px 9px;border-radius:14px;text-transform:capitalize;}
+.exinfo-tag.primary{background:rgba(224,82,82,.15);color:var(--core);}
+.exinfo-tag.secondary{background:var(--s3);color:var(--muted);}
+.exinfo-tag.equip{background:rgba(74,158,224,.14);color:var(--upper);}
+.exinfo-steps{margin:14px 0 4px;padding:0;list-style:none;counter-reset:step;}
+.exinfo-steps li{position:relative;padding:8px 0 8px 34px;border-bottom:1px solid var(--border2);
+  font-size:13px;line-height:1.5;color:var(--text);counter-increment:step;}
+.exinfo-steps li:last-child{border-bottom:none;}
+.exinfo-steps li::before{content:counter(step);position:absolute;left:0;top:8px;width:22px;height:22px;
+  background:var(--s3);border-radius:50%;font-family:'DM Mono',monospace;font-size:11px;font-weight:700;
+  color:var(--purple);display:flex;align-items:center;justify-content:center;}
+.exinfo-muscle-lbl{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-top:12px;}
+.lib-launch{width:100%;margin:2px 0 10px;padding:12px;background:var(--s2);border:1px solid var(--border2);
+  border-radius:10px;color:var(--text);font-size:13px;font-weight:700;cursor:pointer;}
+.lib-launch:active{background:var(--s3);}
+.mgmt-muscle{font-size:10px;color:var(--muted);font-weight:400;text-transform:capitalize;margin-top:1px;}
+.prog-muscle-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:2px 2px 12px;cursor:pointer;}
+/* Library-sourced names arrive lowercase — capitalize for display (won't lowercase existing caps). */
+.ex-name,.mgmt-ex-name,.sess-ex-name,.start-pill,.lib-name{text-transform:capitalize;}
+
 /* ── Programs ── */
 .prog-active-card{margin:2px 0 6px;padding:12px 14px;border-radius:var(--r);
   background:rgba(155,114,207,.1);border:1px solid rgba(155,114,207,.28);}
@@ -867,6 +908,26 @@ margin-bottom:10px;padding:14px;
   </div>
 </div>
 
+<!-- EXERCISE LIBRARY MODAL -->
+<div class="modal-bg" id="modal-library" onclick="closeModal('library')">
+  <div class="modal-sheet" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div>
+    <div class="modal-title">🔍 Exercise Library</div>
+    <input class="tmpl-name-input" id="lib-search" placeholder="Search exercises…" oninput="renderLibrary()" style="margin-bottom:10px">
+    <div class="lib-filters" id="lib-filters"></div>
+    <div id="lib-results"></div>
+    <div class="lib-credit">Exercise data from <b>ExerciseDB</b>, via the <b>hasaneyldrm/exercises-dataset</b> project. Review ExerciseDB's terms before reuse.</div>
+  </div>
+</div>
+
+<!-- EXERCISE INFO MODAL -->
+<div class="modal-bg" id="modal-exinfo" onclick="closeModal('exinfo')">
+  <div class="modal-sheet" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div>
+    <div id="exinfo-body"></div>
+  </div>
+</div>
+
 <!-- TEMPLATES MODAL -->
 <div class="modal-bg" id="modal-templates" onclick="closeModal('templates')">
   <div class="modal-sheet" onclick="event.stopPropagation()">
@@ -1185,7 +1246,7 @@ const CALLIE_PROGRAM = {"id":"callie16","name":"Callie · 16-Week Athlete","buil
 
 // ── State ─────────────────────────────────────────────────────────────────────
 let sections, exercises, sessions, prs, draft, templates, settings;
-let programs, programState, exMeta;   // programs, {programId,dayIndex}, per-exercise {weight,inc,fails}
+let programs, programState, exMeta, exInfo;   // programs, {programId,dayIndex}, per-exercise {weight,inc,fails}, library metadata
 let workoutPlan = null;
 let workoutProgram = null;            // {programId,dayIndex,dayName} when the active workout came from a program
 let workoutDate = new Date().toISOString().slice(0,10);
@@ -1208,6 +1269,7 @@ function loadAll() {
   programs  = load('wt_programs', null);
   programState = load('wt_progstate', null);
   exMeta    = load('wt_exmeta', {});
+  exInfo    = load('wt_exinfo', {});   // muscle/equipment metadata for library-added exercises
   // Backfill fields added by later versions.
   if(!settings.unit)   settings.unit = 'lb';
   if(!settings.plates) settings.plates = [...UNIT_DEFAULTS[U()].plates];
@@ -1219,8 +1281,8 @@ function loadAll() {
   document.getElementById('workout-date').value = workoutDate;
   updateDateDisplay();
 }
-function saveAll()     { ['wt_secs','wt_exs','wt_sess','wt_prs','wt_tmpls','wt_set','wt_programs','wt_progstate','wt_exmeta']
-  .forEach((k,i)=>localStorage.setItem(k, JSON.stringify([sections,exercises,sessions,prs,templates,settings,(programs||[]).filter(p=>!p.builtin),programState,exMeta][i]))); }
+function saveAll()     { ['wt_secs','wt_exs','wt_sess','wt_prs','wt_tmpls','wt_set','wt_programs','wt_progstate','wt_exmeta','wt_exinfo']
+  .forEach((k,i)=>localStorage.setItem(k, JSON.stringify([sections,exercises,sessions,prs,templates,settings,(programs||[]).filter(p=>!p.builtin),programState,exMeta,exInfo][i]))); }
 function saveDraft()   { localStorage.setItem('wt_draft', JSON.stringify(draft)); }
 
 // ── Date ──────────────────────────────────────────────────────────────────────
@@ -1576,6 +1638,7 @@ function renderBuilder(){
     <button class="start-quick-btn" onclick="startSelectAll()">Select All</button>
     <button class="start-quick-btn" onclick="startSelectNone()">Clear Selection</button>
   </div>`;
+  html += `<button class="start-save-tmpl" onclick="showLibrary()">🔍 Browse exercise library</button>`;
   html += `<button class="start-save-tmpl" onclick="showTemplates()">📋 Save / manage templates</button>`;
   html += '</div>';
   body.innerHTML = html;
@@ -2060,7 +2123,14 @@ function renderProgDetail(ex){
   const volPts=pts.filter(p=>p.data.vol>0).map(p=>({date:p.date,value:p.data.vol}));
   const repPts=pts.filter(p=>p.data.maxReps>0).map(p=>({date:p.date,value:p.data.maxReps}));
 
+  const info = exInfo[ex];
+  const muscleRow = info ? `<div class="prog-muscle-row" onclick="showExInfoName('${ex}')">
+      <span class="exinfo-tag primary">${htmlEsc(info.t)}</span>
+      ${(info.s||[]).slice(0,3).map(m=>`<span class="exinfo-tag secondary">${htmlEsc(m)}</span>`).join('')}
+      <span style="margin-left:auto;font-size:11px;color:var(--purple);font-weight:700">ⓘ how-to</span>
+    </div>` : '';
   det.innerHTML=`<div class="prog-detail">
+    ${muscleRow}
     <div class="prog-stats">
       <div class="stat-box"><div class="stat-lbl">${isBW?'Best Reps':'All-Time PR'}</div>
         <div class="stat-val gold">${isBW?(prReps?prReps+' reps':'—'):(pr?pr.toFixed(1)+' '+U():'—')}</div></div>
@@ -2179,6 +2249,7 @@ function drawChart(container, points, color, unit){
 function renderExercises(){
   const body=document.getElementById('ex-body');
   let html='<div class="ex-mgmt">';
+  html+=`<button class="lib-launch" onclick="showLibrary()">🔍 Browse exercise library (1,300+)</button>`;
   html+=`<div class="add-sec-row">
     <input class="add-input" id="new-sec-inp" placeholder="New section name…" maxlength="30">
     <button class="add-confirm" onclick="addSection()">+ Add</button>
@@ -2192,7 +2263,8 @@ function renderExercises(){
         <button class="mgmt-sec-del" onclick="removeSection('${esc(sec)}')">×</button>
       </div>
       ${exList.map(ex=>`<div class="mgmt-ex-row" id="mrow-${esc(ex)}">
-        <div class="mgmt-ex-name">${ex}</div>
+        <div class="mgmt-ex-name">${ex}${exInfo[ex]?`<div class="mgmt-muscle">${htmlEsc(exInfo[ex].t)}${exInfo[ex].eq?' · '+htmlEsc(exInfo[ex].eq):''}</div>`:''}</div>
+        ${exInfo[ex]?`<button class="edit-btn" onclick="showExInfoName('${ex}')" title="Muscles &amp; how-to">ⓘ</button>`:''}
         <button class="edit-btn" onclick="openExerciseHistory('${ex}')" title="History &amp; progress">📈</button>
         <button class="edit-btn" onclick="startMove('${esc(sec)}','${ex}')" title="Move to another section">↔</button>
         <button class="edit-btn" onclick="startRename('${esc(sec)}','${ex}')" title="Rename">✏️</button>
@@ -2729,6 +2801,112 @@ function applyProgression(){
 }
 
 // ════════════════════════════════════════════════════════════════
+// EXERCISE LIBRARY  (data: ExerciseDB via hasaneyldrm/exercises-dataset)
+// ════════════════════════════════════════════════════════════════
+let EXLIB=null, HOWTO=null, libBP='', libShown=[];
+const LIB_MAX=60;
+const BP_SECTION={ waist:'Core', cardio:'Core', chest:'Upper Body', back:'Upper Body',
+  'upper arms':'Upper Body', 'lower arms':'Upper Body', shoulders:'Upper Body', neck:'Upper Body',
+  'upper legs':'Lower Body', 'lower legs':'Lower Body' };
+function htmlEsc(s){ return String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+// Data files are lazy-loaded once and cached by the service worker for offline use.
+async function loadExLib(){ if(EXLIB) return EXLIB; const r=await fetch('data/exercises.json'); if(!r.ok) throw 0; EXLIB=await r.json(); return EXLIB; }
+async function loadHowTo(){ if(HOWTO) return HOWTO; const r=await fetch('data/how-to.json'); if(!r.ok) throw 0; HOWTO=await r.json(); return HOWTO; }
+
+async function showLibrary(){
+  libBP='';
+  document.getElementById('lib-search').value='';
+  document.getElementById('lib-filters').innerHTML='';
+  document.getElementById('lib-results').innerHTML='<div class="lib-empty">Loading library…</div>';
+  openModal('library');
+  try{
+    await loadExLib();
+    const bps=[...new Set(EXLIB.map(e=>e.bp))].sort();
+    document.getElementById('lib-filters').innerHTML=
+      `<button class="lib-chip on" onclick="setLibBP('')">All</button>`+
+      bps.map(bp=>`<button class="lib-chip" onclick="setLibBP('${bp}')">${bp}</button>`).join('');
+    renderLibrary();
+  }catch(e){
+    document.getElementById('lib-results').innerHTML=
+      '<div class="lib-empty">Couldn\'t load the library.\nConnect to the internet once to download it —\nit works offline afterward.</div>';
+  }
+}
+function setLibBP(bp){
+  libBP=bp;
+  document.querySelectorAll('#lib-filters .lib-chip').forEach(c=>c.classList.toggle('on', c.textContent===(bp||'All')));
+  renderLibrary();
+}
+function renderLibrary(){
+  if(!EXLIB) return;
+  const q=(document.getElementById('lib-search').value||'').toLowerCase().trim();
+  let list=EXLIB;
+  if(libBP) list=list.filter(e=>e.bp===libBP);
+  if(q) list=list.filter(e=>e.n.includes(q)||e.t.includes(q)||e.eq.includes(q)||(e.s||[]).some(m=>m.includes(q)));
+  const total=list.length;
+  libShown=list.slice(0,LIB_MAX);
+  const res=document.getElementById('lib-results');
+  if(!total){ res.innerHTML='<div class="lib-empty">No matches.\nTry another search or filter.</div>'; return; }
+  const owned=new Set(sections.flatMap(s=>exercises[s]||[]));
+  res.innerHTML=`<div class="lib-count">${total>LIB_MAX?`Showing ${LIB_MAX} of ${total} — refine to see more`:`${total} exercise${total!==1?'s':''}`}</div>`+
+    libShown.map((e,i)=>{
+      const isAdded=owned.has(e.n);
+      return `<div class="lib-row">
+        <div class="lib-info">
+          <div class="lib-name">${htmlEsc(e.n)}</div>
+          <div class="lib-meta">${htmlEsc(e.t)} · ${htmlEsc(e.eq)}</div>
+        </div>
+        <button class="lib-i" onclick="showExInfoIdx(${i})" title="How to">ⓘ</button>
+        <button class="lib-add ${isAdded?'added':''}" onclick="addFromLibraryIdx(${i}, this)">${isAdded?'✓ Added':'+ Add'}</button>
+      </div>`;
+    }).join('');
+}
+function showExInfoIdx(i){ const e=libShown[i]; if(e) showExInfo(e); }
+function addFromLibraryIdx(i, btn){ const e=libShown[i]; if(e) addFromLibrary(e, btn); }
+
+function addFromLibrary(e, btn){
+  if(sections.flatMap(s=>exercises[s]||[]).includes(e.n)){ showToast('Already in your list'); return; }
+  const sec = BP_SECTION[e.bp] || sections[0] || 'Upper Body';
+  ensureExercise(e.n, sec);
+  exInfo[e.n]={ bp:e.bp, eq:e.eq, t:e.t, s:e.s||[] };
+  saveAll();
+  if(btn){ btn.textContent='✓ Added'; btn.classList.add('added'); }
+  const landed = sections.find(s=>(exercises[s]||[]).includes(e.n)) || sec;
+  // Refresh whatever's underneath the modal so the new exercise shows up.
+  if(activeTab==='exercises') renderExercises();
+  else if(activeTab==='log' && builderOpen) renderBuilder();
+  showToast('Added to '+landed);
+}
+
+// Open the info sheet for a library record OR an app exercise name (uses exInfo).
+function showExInfoName(name){
+  const rec = exInfo[name] ? {n:name, ...exInfo[name]} : (EXLIB && EXLIB.find(e=>e.n===name));
+  if(rec) showExInfo(rec); else showToast('No details for this exercise');
+}
+async function showExInfo(rec){
+  const body=document.getElementById('exinfo-body');
+  const tags=`<div class="exinfo-tags">
+    <span class="exinfo-tag primary">${htmlEsc(rec.t)}</span>
+    ${(rec.s||[]).map(m=>`<span class="exinfo-tag secondary">${htmlEsc(m)}</span>`).join('')}
+    <span class="exinfo-tag equip">🏋 ${htmlEsc(rec.eq)}</span></div>`;
+  body.innerHTML=`<div class="exinfo-name">${htmlEsc(rec.n)}</div>
+    <div class="exinfo-muscle-lbl">Muscles worked</div>${tags}
+    <div class="exinfo-muscle-lbl">How to</div>
+    <div id="exinfo-how"><div class="lib-empty">Loading…</div></div>
+    <div class="lib-credit">Data from ExerciseDB, via hasaneyldrm/exercises-dataset.</div>`;
+  openModal('exinfo');
+  try{
+    const how=await loadHowTo();
+    const steps=how[rec.n];
+    document.getElementById('exinfo-how').innerHTML = steps&&steps.length
+      ? `<ol class="exinfo-steps">${steps.map(s=>`<li>${htmlEsc(s)}</li>`).join('')}</ol>`
+      : '<div class="lib-empty">No instructions available for this exercise.</div>';
+  }catch(e){
+    document.getElementById('exinfo-how').innerHTML='<div class="lib-empty">Connect to the internet once to download instructions.</div>';
+  }
+}
+
+// ════════════════════════════════════════════════════════════════
 // SETTINGS
 // ════════════════════════════════════════════════════════════════
 // Working copy of the unit while the modal is open (applied on Save).
@@ -2809,7 +2987,8 @@ function backupData() {
     wt_set:   settings,
     wt_programs: (programs||[]).filter(p=>!p.builtin),
     wt_progstate: programState,
-    wt_exmeta: exMeta
+    wt_exmeta: exMeta,
+    wt_exinfo: exInfo
   };
   const json = JSON.stringify(data, null, 2);
   const a = document.createElement('a');
@@ -2840,6 +3019,7 @@ function onRestoreFile(input) {
       if(!settings.unit) settings.unit='lb';
       if(!settings.plates) settings.plates=[...UNIT_DEFAULTS[U()].plates];
       exMeta       = data.wt_exmeta || {};
+      exInfo       = data.wt_exinfo || {};
       programState = data.wt_progstate || null;
       programs     = [...builtinPrograms(), ...((data.wt_programs)||[])];
       saveAll(); saveDraft();

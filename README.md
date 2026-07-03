@@ -12,6 +12,7 @@ A simple, private workout tracker that runs entirely in your browser. No account
 - **Supersets, RPE targets, rep ranges & timed holds** — antagonist pairs are grouped with short rest, sets can prescribe a rep range and an RPE/reps-in-reserve target, and planks/holds are logged in seconds
 - **Home dashboard** — open to your stats (streak, weekly count, total sessions), a "next workout" hero that starts your program in one tap, quick actions, and recent activity
 - **Per-exercise history** — every logged session for an exercise (sets, est. 1RM, PRs, notes) alongside its progress charts; open it from the 📈 button in the Exercises tab
+- **Exercise library** — browse/search 1,300+ exercises (filter by body part), each with target & secondary muscles, equipment, and step-by-step how-to; add any to your list in a tap (data from ExerciseDB — see attribution below)
 - **Save from anywhere** — while a workout is in progress, a bar on every other tab lets you jump back (Resume) or log it (Save) without hunting for the button; the Home tab itself shows as "Workout" mid-session
 - **Focus mode** — during a workout, one exercise (or superset pair) fills the screen with a progress header and an "up next" rail; it auto-advances as you finish. Toggle to the full list anytime (☰)
 - **Prescribed sets** — the app pre-fills each set's target weight and reps from your working weight (or a percentage of your training max for 5/3/1); AMRAP sets are flagged
@@ -76,11 +77,26 @@ All workout data is stored locally in your browser (`localStorage`). It never le
 ├── index.html            The entire app (HTML + CSS + JS in one file)
 ├── manifest.json         PWA manifest (name, icons, colors)
 ├── sw.js                 Service worker for offline caching
+├── data/
+│   ├── exercises.json    Exercise library metadata (name, muscles, equipment)
+│   └── how-to.json       English step-by-step instructions, keyed by name
 ├── icon-192.png          App icon (192×192)
 ├── icon-512.png          App icon (512×512)
 ├── apple-touch-icon.png  iOS home-screen icon (180×180)
 └── README.md             This file
 ```
+
+The two `data/*.json` files back the **Exercise Library** (Exercises tab → *Browse exercise library*). They are lazy-loaded on first use and cached by the service worker, so the library works offline afterward.
+
+## Exercise data & attribution
+
+The exercise library (names, target/secondary muscles, equipment, and how-to
+instructions) is derived from **[ExerciseDB](https://exercisedb.dev/)** v1,
+sourced via the community project
+**[hasaneyldrm/exercises-dataset](https://github.com/hasaneyldrm/exercises-dataset)**.
+No exercise images or animations are included. This app bundles only factual
+metadata plus English instructions; if you fork or redistribute, review
+ExerciseDB's terms of use for the underlying content.
 
 ## Tech
 
