@@ -224,6 +224,25 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);
 .ss-badge{font-size:9px;font-weight:700;background:var(--upper);color:#fff;
   padding:1px 6px;border-radius:4px;margin-left:7px;vertical-align:middle;letter-spacing:.03em;}
 
+/* ── Interleaved superset (rounds) ── */
+.ssr-card{background:var(--s1);border:1px solid rgba(74,158,224,.32);border-radius:var(--r);
+  margin-bottom:10px;overflow:hidden;}
+.ssr-hdr{display:flex;flex-direction:column;padding:10px 12px 4px;font-size:11px;font-weight:700;
+  letter-spacing:.06em;text-transform:uppercase;color:var(--upper);}
+.ssr-hint{font-size:10px;font-weight:500;letter-spacing:0;text-transform:none;color:var(--muted);margin-top:2px;}
+.ssr-legend{display:flex;flex-wrap:wrap;gap:6px 14px;padding:2px 12px 8px;border-bottom:1px solid var(--border);}
+.ssr-leg{font-size:12px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:2px;text-transform:capitalize;}
+.ssr-leg b{color:var(--upper);}
+.ssr-i{background:none;border:none;font-size:13px;cursor:pointer;padding:0 2px;}
+.ssr-round{padding:4px 12px 6px;}
+.ssr-round-lbl{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--muted);padding:6px 0 2px;}
+.ssr-row{grid-template-columns:34px 20px 1fr 1fr!important;}
+.ssr-row.next{background:rgba(74,158,224,.10);border-radius:8px;
+  box-shadow:inset 3px 0 0 var(--upper);}
+.ssr-ex{font-family:'DM Mono',monospace;font-size:13px;font-weight:700;color:var(--upper);text-align:center;}
+.ssr-row .set-target{grid-column:3 / 5;}
+
 /* ── Hybrid focus mode ── */
 .focus-hdr{position:sticky;top:0;z-index:40;background:var(--bg);
   border-bottom:1px solid var(--border);padding:9px 12px 8px;}
@@ -1506,15 +1525,75 @@ function exerciseComplete(ex){
   return filled.length>0 && filled.every(s=>s.done);
 }
 function unitLabel(u){ const ss=draft[u[0]]&&draft[u[0]].superset; return ss?`Superset ${ss}`:u[0]; }
+function ssMembers(ss){ return (workoutPlan||[]).filter(ex=>draft[ex]&&draft[ex].superset===ss); }
+
+// Interleaved superset: renders rounds so you alternate A set 1 → B set 1 → A set 2 …
+function buildSupersetRounds(unit){
+  const ss=draft[unit[0]].superset;
+  const legend=unit.map((ex,k)=>{
+    const L=String.fromCharCode(65+k);
+    return `<span class="ssr-leg"><b>${L}</b>&nbsp;${ex}
+      <button class="ssr-i" onclick="showExInfoName('${ex}')" title="Image & how-to">🖼️</button></span>`;
+  }).join('');
+  const rounds=Math.max(...unit.map(ex=>getDraft(ex).sets.length));
+  let nextMarked=false, roundsHtml='';
+  for(let r=0;r<rounds;r++){
+    let rowsHtml='';
+    unit.forEach((ex,k)=>{
+      const d=getDraft(ex); const s=d.sets[r]; if(!s) return;
+      const L=String.fromCharCode(65+k); const ke=esc(ex);
+      const {check, wCell, rInput, target}=setParts(ex, r);
+      let nextCls='';
+      if(!nextMarked && !s.done){ nextCls=' next'; nextMarked=true; }
+      rowsHtml+=`<div class="set-row ssr-row${s.done?' done':''}${nextCls}" id="sr-${ke}-${r}">
+        ${check}
+        <div class="ssr-ex" title="${ex}">${L}</div>
+        ${wCell}${rInput}
+        ${target?`<div class="set-target">${target}</div>`:''}
+      </div>`;
+    });
+    roundsHtml+=`<div class="ssr-round"><div class="ssr-round-lbl">Round ${r+1}</div>${rowsHtml}</div>`;
+  }
+  return `<div class="ssr-card">
+    <div class="ssr-hdr">⇄ Superset ${ss}<span class="ssr-hint">alternate — A set 1 → B set 1 → repeat</span></div>
+    <div class="ssr-legend">${legend}</div>
+    ${roundsHtml}
+    <div class="set-controls">
+      <button class="set-ctrl-btn" onclick="ssRound('${ss}',-1)">− Round</button>
+      <button class="set-ctrl-btn" onclick="ssRound('${ss}',1)">+ Round</button>
+      <button class="complete-btn" onclick="ssComplete('${ss}')">✓ Complete</button>
+    </div>
+  </div>`;
+}
+function ssRound(ss, delta){
+  ssMembers(ss).forEach(ex=>{
+    const d=getDraft(ex);
+    if(delta>0) d.sets.push({w:'',r:'',done:false});
+    else if(d.sets.length>1) d.sets.pop();
+  });
+  saveDraft(); buildLog();
+}
+function ssComplete(ss){
+  let any=false;
+  ssMembers(ss).forEach(ex=>getDraft(ex).sets.forEach(s=>{ if(parseFloat(s.r)>0||parseFloat(s.w)>0){ s.done=true; any=true; } }));
+  if(!any){ showToast('Enter at least one set first'); return; }
+  saveDraft(); buildLog();
+}
+// After toggling a set, move the "next up" highlight to the first undone round row.
+function refreshSSNext(){
+  const rows=[...document.querySelectorAll('.ssr-row')];
+  if(!rows.length) return;
+  rows.forEach(r=>r.classList.remove('next'));
+  const next=rows.find(r=>!r.classList.contains('done'));
+  if(next) next.classList.add('next');
+}
 
 // ── Full-list view (every exercise, superset groups) with a Focus toggle ──
 function buildListHTML(){
   let html=`<div class="focus-listbar"><button class="focus-all-btn" onclick="setFocusMode(true)">⊡ Focus mode</button></div><div class="log-list">`;
   workoutUnits().forEach(u=>{
-    if(u.length>1){
-      const ss=draft[u[0]].superset;
-      html+=`<div class="superset-group"><div class="superset-lbl">⇄ Superset ${ss} · alternate sets, short rest</div>`+u.map(cardWrap).join('')+`</div>`;
-    } else html+=cardWrap(u[0]);
+    if(u.length>1) html+=buildSupersetRounds(u);
+    else html+=cardWrap(u[0]);
   });
   return html+'</div>';
 }
@@ -1535,11 +1614,9 @@ function buildFocusHTML(){
       <button class="focus-nav-btn next" onclick="focusNext()">${focusIndex>=units.length-1?'✓ Last exercise':'Next ›'}</button>
     </div>
   </div>`;
-  const inner=unit.map(cardWrap).join('');
   if(unit.length>1){
-    const ss=draft[unit[0]].superset;
-    html+=`<div class="log-list"><div class="superset-group"><div class="superset-lbl">⇄ Superset ${ss} · alternate sets, short rest</div>${inner}</div></div>`;
-  } else html+=`<div class="log-list">${inner}</div>`;
+    html+=`<div class="log-list">${buildSupersetRounds(unit)}</div>`;
+  } else html+=`<div class="log-list">${cardWrap(unit[0])}</div>`;
   html+=`<div class="focus-spacer"></div>`;
   // up-next rail: one chip per exercise, tap to jump to its unit
   let chips='';
@@ -1743,41 +1820,41 @@ function editPlan(){
   buildLog();
 }
 
+// The interactive pieces of one set — reused by the card and the superset-rounds view.
+function setParts(ex, i){
+  const d=getDraft(ex); const s=d.sets[i]||{w:'',r:'',done:false}; const ke=esc(ex);
+  const bw=settings.bw>0;
+  const check = s.warm
+    ? `<div class="set-check ${s.done?'done':''}" id="chk-${ke}-${i}" onclick="toggleDone('${ex}',${i})"
+         style="flex-direction:column;gap:0"><span style="font-size:8px;font-weight:700;color:var(--gold);line-height:1">W</span>${s.done?'✓':'○'}</div>`
+    : `<div class="set-check ${s.done?'done':''}" id="chk-${ke}-${i}" onclick="toggleDone('${ex}',${i})">${s.done ? '✓' : '○'}</div>`;
+  const wCell = s.hold
+    ? `<div class="set-hold-lbl">hold</div>`
+    : `<input type="number" inputmode="decimal" placeholder="${s.warm?'warm':s.noload?'opt':(bw?settings.bw+' bw':U())}"
+        class="set-input" value="${s.w}" data-ex="${ex}" data-set="${i}" data-t="w" oninput="onInput(this)">`;
+  const rInput = `<input type="number" inputmode="numeric" placeholder="${s.hold?'secs':s.amrap?'AMRAP':'reps'}"
+      class="set-input" value="${s.r}" data-ex="${ex}" data-set="${i}" data-t="r" oninput="onInput(this)">`;
+  let target='';
+  if(!s.warm){
+    if(s.hold) target=`hold ${s.hold}s`;
+    else if(s.tr){
+      target='target '+(s.tw?s.tw+' × ':'')+(s.repsLabel||s.tr)
+        +(s.rpe?` <span class="rpe-badge">@${s.rpe}</span>`:'')
+        +(s.amrap?'<span class="amrap-badge">AMRAP</span>':'');
+    }
+  }
+  return {s, check, wCell, rInput, target};
+}
+
 function buildCard(sec, ex) {
   const d  = getDraft(ex);
   const ke = esc(ex);
-  const bw = settings.bw>0;
   const n  = d.sets.length;
   let rows = '';
   for(let i=0;i<n;i++){
-    const s=d.sets[i]||{w:'',r:'',done:false};
-    const doneCls = s.done ? 'done' : '';
-    const check = s.warm
-      ? `<div class="set-check ${s.done?'done':''}" id="chk-${ke}-${i}" onclick="toggleDone('${ex}',${i})"
-           style="flex-direction:column;gap:0"><span style="font-size:8px;font-weight:700;color:var(--gold);line-height:1">W</span>${s.done?'✓':'○'}</div>`
-      : `<div class="set-check ${s.done?'done':''}" id="chk-${ke}-${i}" onclick="toggleDone('${ex}',${i})">${s.done ? '✓' : '○'}</div>`;
-    // Left (weight) cell: a "hold" label for timed sets, otherwise a weight input.
-    const wCell = s.hold
-      ? `<div class="set-hold-lbl">hold</div>`
-      : `<input type="number" inputmode="decimal" placeholder="${s.warm?'warm':s.noload?'opt':(bw?settings.bw+' bw':U())}"
-          class="set-input" value="${s.w}" data-ex="${ex}" data-set="${i}" data-t="w" oninput="onInput(this)">`;
-    const rPlaceholder = s.hold ? 'secs' : s.amrap ? 'AMRAP' : 'reps';
-    // Target hint: hold seconds, or reps (+range) (+RPE) (+AMRAP).
-    let target='';
-    if(!s.warm){
-      if(s.hold) target=`hold ${s.hold}s`;
-      else if(s.tr){
-        target='target '+(s.tw?s.tw+' × ':'')+(s.repsLabel||s.tr)
-          +(s.rpe?` <span class="rpe-badge">@${s.rpe}</span>`:'')
-          +(s.amrap?'<span class="amrap-badge">AMRAP</span>':'');
-      }
-    }
-    rows += `<div class="set-row ${doneCls} ${s.warm?'warm':''} ${s.hold?'hold':''}" id="sr-${ke}-${i}">
-      ${check}
-      ${wCell}
-      <input type="number" inputmode="numeric" placeholder="${rPlaceholder}"
-        class="set-input" value="${s.r}"
-        data-ex="${ex}" data-set="${i}" data-t="r" oninput="onInput(this)">
+    const {s, check, wCell, rInput, target} = setParts(ex, i);
+    rows += `<div class="set-row ${s.done?'done':''} ${s.warm?'warm':''} ${s.hold?'hold':''}" id="sr-${ke}-${i}">
+      ${check}${wCell}${rInput}
       ${target?`<div class="set-target">${target}</div>`:''}
     </div>`;
   }
@@ -1804,6 +1881,7 @@ function buildCard(sec, ex) {
       <div class="ex-name">${ex}${ssBadge}</div>
       <button class="expand-btn" onclick="event.stopPropagation();toggleCollapse('${ex}')">▾</button>
       <button class="qfill-btn" onclick="event.stopPropagation();quickFill('${ex}')">↺</button>
+      <button class="notes-toggle" onclick="event.stopPropagation();showExInfoName('${ex}')" title="Image & how-to">🖼️</button>
       <button class="notes-toggle ${hasNotes?'has-notes':''}" id="ntog-${ke}"
         onclick="event.stopPropagation();toggleNotes('${ex}')" title="Notes">📝</button>
       <div class="pr-tag" id="prtag-${ke}">PR ⚡</div>
@@ -1947,6 +2025,7 @@ function toggleDone(ex, i) {
     const dur = d.superset ? 45 : (settings.rest||90);
     startRest(ex, info, dur);
   }
+  refreshSSNext();
 }
 
 function quickFill(ex) {
@@ -2937,7 +3016,7 @@ function addFromLibrary(e, btn){
   if(sections.flatMap(s=>exercises[s]||[]).includes(e.n)){ showToast('Already in your list'); return; }
   const sec = BP_SECTION[e.bp] || sections[0] || 'Upper Body';
   ensureExercise(e.n, sec);
-  exInfo[e.n]={ bp:e.bp, eq:e.eq, t:e.t, s:e.s||[] };
+  exInfo[e.n]={ bp:e.bp, eq:e.eq, t:e.t, s:e.s||[], img:e.img||'' };
   saveAll();
   if(btn){ btn.textContent='✓ Added'; btn.classList.add('added'); }
   const landed = sections.find(s=>(exercises[s]||[]).includes(e.n)) || sec;
@@ -2947,20 +3026,30 @@ function addFromLibrary(e, btn){
   showToast('Added to '+landed);
 }
 
-// Open the info sheet for a library record OR an app exercise name (uses exInfo).
-function showExInfoName(name){
-  const rec = exInfo[name] ? {n:name, ...exInfo[name]} : (EXLIB && EXLIB.find(e=>e.n===name));
-  if(rec) showExInfo(rec); else showToast('No details for this exercise');
+// Open the info sheet for any exercise name — resolve muscles/equipment from
+// what the user added (exInfo), else from the library (loading it, matching
+// case-insensitively). How-to + images resolve inside showExInfo.
+async function showExInfoName(name){
+  let rec = exInfo[name] ? {n:name, ...exInfo[name]} : null;
+  if(!rec){
+    try{ await loadExLib(); }catch(e){}
+    if(EXLIB){
+      const lc=String(name).toLowerCase();
+      rec = EXLIB.find(e=>e.n===name) || EXLIB.find(e=>e.n.toLowerCase()===lc);
+    }
+  }
+  showExInfo(rec || {n:name, t:'', s:[], eq:''});
 }
 async function showExInfo(rec){
   const body=document.getElementById('exinfo-body');
-  const tags=`<div class="exinfo-tags">
-    <span class="exinfo-tag primary">${htmlEsc(rec.t)}</span>
-    ${(rec.s||[]).map(m=>`<span class="exinfo-tag secondary">${htmlEsc(m)}</span>`).join('')}
-    <span class="exinfo-tag equip">🏋 ${htmlEsc(rec.eq)}</span></div>`;
+  const muscles = rec.t ? `<div class="exinfo-muscle-lbl">Muscles worked</div>
+    <div class="exinfo-tags">
+      <span class="exinfo-tag primary">${htmlEsc(rec.t)}</span>
+      ${(rec.s||[]).map(m=>`<span class="exinfo-tag secondary">${htmlEsc(m)}</span>`).join('')}
+      ${rec.eq?`<span class="exinfo-tag equip">🏋 ${htmlEsc(rec.eq)}</span>`:''}</div>` : '';
   body.innerHTML=`<div class="exinfo-name">${htmlEsc(rec.n)}</div>
     <div id="exinfo-imgs"></div>
-    <div class="exinfo-muscle-lbl">Muscles worked</div>${tags}
+    ${muscles}
     <div class="exinfo-muscle-lbl">How to</div>
     <div id="exinfo-how"><div class="lib-empty">Loading…</div></div>
     <div class="lib-credit">Data &amp; images from free-exercise-db (public domain). Images load when online.</div>`;
