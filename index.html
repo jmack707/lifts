@@ -260,6 +260,58 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);
   white-space:nowrap;color:var(--muted);}
 .rail-chip.cur .rail-chip-sub{color:rgba(255,255,255,.85);}
 
+/* ── Home dashboard ── */
+#page-log.no-action{bottom:calc(var(--nav) + env(safe-area-inset-bottom));}
+.dash{padding:16px 14px 22px;}
+.dash-hdr{margin-bottom:14px;}
+.dash-date{font-size:13px;color:var(--muted);}
+.dash-title{font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:.04em;line-height:1.05;}
+.dash-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px;}
+.dash-tile{background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:12px 8px;text-align:center;}
+.dash-tile-ic{font-size:16px;}
+.dash-tile-val{font-family:'DM Mono',monospace;font-size:20px;font-weight:500;margin-top:2px;}
+.dash-tile-lbl{font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-top:2px;}
+.dash-hero{background:linear-gradient(135deg,rgba(155,114,207,.22),rgba(74,158,224,.10));
+  border:1px solid rgba(155,114,207,.4);border-radius:18px;padding:17px 16px;margin-bottom:14px;}
+.dash-hero-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;}
+.dash-hero-tag{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--purple);}
+.dash-hero-wk{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);display:flex;align-items:center;gap:8px;}
+.dash-hero-gear{background:none;border:none;color:var(--muted);font-size:15px;cursor:pointer;padding:0;}
+.dash-hero-title{font-family:'Bebas Neue',sans-serif;font-size:27px;letter-spacing:.03em;line-height:1.05;margin:2px 0 4px;}
+.dash-hero-sub{font-size:12px;color:var(--muted);margin-bottom:8px;}
+.dash-hero-ex{font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:16px;}
+.dash-hero-btn{width:100%;padding:15px;background:var(--purple);color:#fff;border:none;border-radius:12px;
+  font-family:'Bebas Neue',sans-serif;font-size:19px;letter-spacing:.08em;cursor:pointer;}
+.dash-hero-btn:active{filter:brightness(1.1);}
+.dash-hero-btn.ghost{background:var(--s2);color:var(--text);border:1px solid var(--border2);}
+.dash-hero-btnrow{display:flex;gap:10px;}
+.dash-quick{display:flex;gap:9px;margin-bottom:18px;}
+.dash-qa{flex:1;background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:13px 6px;text-align:center;cursor:pointer;}
+.dash-qa:active{background:var(--s2);}
+.dash-qa-ic{font-size:20px;}
+.dash-qa-lbl{font-size:11px;font-weight:700;margin-top:4px;}
+.dash-sec-lbl{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;}
+.dash-recent{display:flex;align-items:center;gap:10px;background:var(--s1);border:1px solid var(--border);
+  border-radius:10px;padding:11px 13px;margin-bottom:7px;cursor:pointer;}
+.dash-recent:active{background:var(--s2);}
+.dash-recent-d{font-size:13px;font-weight:700;width:44px;flex-shrink:0;}
+.dash-recent-n{flex:1;font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.dash-recent-pr{font-size:9px;font-weight:700;background:var(--gold);color:#000;padding:1px 5px;border-radius:3px;}
+.dash-recent-v{font-family:'DM Mono',monospace;font-size:11px;color:var(--gold);flex-shrink:0;}
+.dash-viewall{text-align:center;font-size:12px;font-weight:700;color:var(--muted);padding:10px 0 2px;cursor:pointer;}
+.dash-empty{text-align:center;color:var(--muted);font-family:'DM Mono',monospace;font-size:13px;
+  white-space:pre-line;padding:26px 0;line-height:1.6;}
+
+/* ── Per-exercise session history ── */
+.exh-list{display:flex;flex-direction:column;gap:0;}
+.exh-row{padding:9px 2px;border-bottom:1px solid var(--border2);}
+.exh-row:last-child{border-bottom:none;}
+.exh-date{font-size:12px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:6px;}
+.exh-pr{font-size:8px;font-weight:700;background:var(--gold);color:#000;padding:1px 5px;border-radius:3px;}
+.exh-sets{font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);margin-top:3px;}
+.exh-metric{font-family:'DM Mono',monospace;font-size:11px;margin-top:2px;}
+.exh-notes{font-size:11px;color:var(--muted);font-style:italic;margin-top:3px;}
+
 /* ── Programs ── */
 .prog-active-card{margin:2px 0 6px;padding:12px 14px;border-radius:var(--r);
   background:rgba(155,114,207,.1);border:1px solid rgba(155,114,207,.28);}
@@ -1115,6 +1167,7 @@ let workoutProgram = null;            // {programId,dayIndex,dayName} when the a
 let workoutDate = new Date().toISOString().slice(0,10);
 let activeSection = '', activeTab = 'log', selectedEx = null, progChartMode = '1rm';
 let focusIndex = 0;   // current unit in the hybrid focus view
+let builderOpen = false;   // dashboard (false) vs. exercise-picker (true) on the home screen
 
 function load(key, def) {
   try { const v=localStorage.getItem(key); return v?JSON.parse(v):def; }
@@ -1246,14 +1299,25 @@ function buildLog() {
   if(!workoutPlan){
     document.getElementById('sec-pills').innerHTML = '';
     document.getElementById('plan-banner').style.display = 'none';
-    document.getElementById('streak-bar').style.display = '';
-    logAction.innerHTML =
-      `<button class="log-btn" onclick="applyPlan()">START WORKOUT</button>`;
-    renderStartScreen();
-    renderStreakBar();
+    document.getElementById('streak-bar').style.display = 'none';   // the dashboard shows its own stats
+    const pg = document.getElementById('page-log');
+    if(builderOpen){
+      pg.classList.remove('no-action');
+      logAction.style.display = 'flex';
+      logAction.innerHTML =
+        `<button class="sm-btn" onclick="closeBuilder()">‹ Back</button>`+
+        `<button class="log-btn" onclick="applyPlan()">START WORKOUT</button>`;
+      renderBuilder();
+    } else {
+      pg.classList.add('no-action');
+      logAction.style.display = 'none';
+      renderDashboard();
+    }
     return;
   }
+  document.getElementById('page-log').classList.remove('no-action');
   // ── Active workout ──
+  logAction.style.display = 'flex';
   logAction.innerHTML =
     `<button class="sm-btn" onclick="endWorkout()">End</button>`+
     `<button class="log-btn" onclick="logWorkout()">LOG WORKOUT</button>`;
@@ -1346,27 +1410,91 @@ function focusNext(){
 }
 
 // ── Start Workout screen ──────────────────────────────────────
-function renderStartScreen() {
+// The home screen is either the dashboard (default) or the exercise picker.
+function renderStartScreen(){ builderOpen ? renderBuilder() : renderDashboard(); }
+
+function openBuilder(){ builderOpen = true; buildLog(); }
+function closeBuilder(){ builderOpen = false; buildLog(); }
+
+// ── Command-center dashboard ──────────────────────────────────
+function renderDashboard(){
+  const body = document.getElementById('log-body');
+  const { streak, thisWeek, total } = calcStreak();
+  const dstr = new Date(workoutDate+'T12:00:00').toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric'});
+  const tile = (icon,val,lbl,col)=>`<div class="dash-tile">
+      <div class="dash-tile-ic">${icon}</div>
+      <div class="dash-tile-val" style="color:${col}">${val}</div>
+      <div class="dash-tile-lbl">${lbl}</div></div>`;
+  const qa = (icon,lbl,fn)=>`<div class="dash-qa" onclick="${fn}"><div class="dash-qa-ic">${icon}</div><div class="dash-qa-lbl">${lbl}</div></div>`;
+
+  let html = '<div class="dash">';
+  html += `<div class="dash-hdr"><div class="dash-date">${dstr}</div><div class="dash-title">READY TO LIFT</div></div>`;
+  html += `<div class="dash-stats">
+    ${tile('🔥', streak, 'day streak', streak>0?'var(--gold)':'var(--text)')}
+    ${tile('💪', thisWeek, 'this week', 'var(--text)')}
+    ${tile('📈', total, 'sessions', 'var(--text)')}</div>`;
+
+  const prog = currentProgram();
+  if(prog){
+    const day = getProgramDay(prog, programState);
+    const names = day.exercises.map(de=>de.ex);
+    const preview = names.slice(0,4).join(' · ') + (names.length>4?` · +${names.length-4} more`:'');
+    const wk = prog.weeks ? `Week ${(programState.weekIndex||0)+1} / ${prog.weeks.length}` : `${prog.name}`;
+    html += `<div class="dash-hero">
+      <div class="dash-hero-top">
+        <div class="dash-hero-tag">📚 Next Workout</div>
+        <div class="dash-hero-wk">${wk}<button class="dash-hero-gear" onclick="showPrograms()">⚙</button></div>
+      </div>
+      <div class="dash-hero-title">${day.name.toUpperCase()}</div>
+      <div class="dash-hero-sub">${dayLabel(prog, programState)}</div>
+      <div class="dash-hero-ex">${preview}</div>
+      <button class="dash-hero-btn" onclick="startProgramDay()">START WORKOUT ›</button>
+    </div>`;
+  } else {
+    html += `<div class="dash-hero">
+      <div class="dash-hero-tag" style="color:var(--purple)">Start training</div>
+      <div class="dash-hero-title" style="font-size:24px;margin:6px 0 4px">Build a workout<br>or follow a program</div>
+      <div class="dash-hero-btnrow">
+        <button class="dash-hero-btn" onclick="openBuilder()">＋ Build workout</button>
+        <button class="dash-hero-btn ghost" onclick="showPrograms()">📚 Programs</button>
+      </div>
+    </div>`;
+  }
+
+  html += `<div class="dash-quick">
+    ${qa('✏️','Build custom','openBuilder()')}
+    ${qa('📋','Templates','showTemplates()')}
+    ${qa('📚','Programs','showPrograms()')}
+    ${qa('🔢','Plates','showPlateCalc()')}</div>`;
+
+  if(sessions.length){
+    html += `<div class="dash-sec-lbl">Recent</div>`;
+    sessions.slice(0,3).forEach(s=>{
+      const d = new Date(s.date+'T12:00:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+      const label = (s.program&&s.program.day) || (s.exercises||[]).slice(0,2).map(e=>e.ex).join(', ') || 'Workout';
+      const prc = (s.prs||[]).length;
+      html += `<div class="dash-recent" onclick="switchTab('history')">
+        <div class="dash-recent-d">${d}</div>
+        <div class="dash-recent-n">${label}</div>
+        ${prc?`<div class="dash-recent-pr">${prc} PR</div>`:''}
+        ${s.totalVol>0?`<div class="dash-recent-v">${s.totalVol.toLocaleString()} ${s.unit||'lb'}</div>`:''}
+      </div>`;
+    });
+    html += `<div class="dash-viewall" onclick="switchTab('history')">View all history ›</div>`;
+  } else {
+    html += `<div class="dash-empty">No workouts yet.\nStart above to log your first. 💪</div>`;
+  }
+  html += '</div>';
+  body.innerHTML = html;
+}
+
+// ── Exercise picker (reached via "Build custom") ──────────────
+function renderBuilder(){
   const body = document.getElementById('log-body');
   if(!builderSelected) builderSelected = new Set();
   let html = '<div class="start-screen">';
-  html += '<div class="start-title">Start Your Workout</div>';
+  html += '<div class="start-title">Build a Workout</div>';
   html += '<div class="start-sub">Tap the exercises you\'re doing today, then hit Start.</div>';
-
-  const activeProg = currentProgram();
-  if(activeProg){
-    const day = getProgramDay(activeProg, programState);
-    const preview = day.exercises.map(de=>`${de.ex} ${topSetLabel(de)}`).join(' · ');
-    html += `<div class="prog-active-card">
-      <div class="prog-active-top">
-        <div class="prog-active-name">📚 ${activeProg.name}</div>
-        <button class="prog-mini-btn" onclick="showPrograms()" title="Manage program">⚙</button>
-      </div>
-      <div class="prog-active-day">Next: ${dayLabel(activeProg, programState)}</div>
-      <div class="prog-active-ex">${preview}</div>
-      <button class="prog-start-btn" onclick="startProgramDay()">START ${day.name.toUpperCase()}</button>
-    </div>`;
-  }
 
   if(templates.length){
     html += '<div class="start-sec-lbl">⚡ Quick start from a template</div>';
@@ -1446,14 +1574,16 @@ function endWorkout(){
   workoutPlan = null;
   workoutProgram = null;
   builderSelected = new Set();
+  builderOpen = false;
   draft = {}; saveDraft();
   buildLog();
 }
 
 function editPlan(){
-  // keep current selection + draft, return to selection screen
+  // keep current selection + draft, return to the picker
   builderSelected = new Set(workoutPlan || []);
   workoutPlan = null;
+  builderOpen = true;
   buildLog();
 }
 
@@ -1848,6 +1978,8 @@ function renderProgress(){
 }
 
 function selProgEx(ex){ selectedEx=ex; renderProgress(); }
+// Jump straight to an exercise's chart + full session history.
+function openExerciseHistory(ex){ selectedEx=ex; switchTab('progress'); }
 
 function renderProgDetail(ex){
   const det=document.getElementById('prog-detail');
@@ -1896,9 +2028,32 @@ function renderProgDetail(ex){
       <div class="chart-title" id="chart-card-title"></div>
       <div id="chart-area"></div>
     </div>
+    ${buildExHistory(ex, col)}
   </div>`;
 
   renderChart(col, ormPts, volPts, repPts, weekPts, isBW);
+}
+
+// Full session-by-session history for one exercise (newest first).
+function buildExHistory(ex, col){
+  const rows=[];
+  sessions.forEach(s=>{
+    const e=(s.exercises||[]).find(e=>e.ex===ex);
+    if(!e) return;
+    const setsStr=(e.sets||[]).filter(st=>st.r>0).map(st=>st.hold?`${st.r}s`:st.w>0?`${st.w}×${st.r}`:`BW×${st.r}`).join('  ');
+    const d=new Date(s.date+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+    const isPR=(s.prs||[]).includes(ex);
+    const metric=e.orm>0?`${e.orm} ${s.unit||'lb'} 1RM`:e.maxReps>0?`${e.maxReps} reps`:'';
+    rows.push(`<div class="exh-row">
+      <div class="exh-date">${d}${isPR?' <span class="exh-pr">PR</span>':''}</div>
+      <div class="exh-sets">${setsStr||'—'}</div>
+      ${metric?`<div class="exh-metric" style="color:${col}">${metric}</div>`:''}
+      ${e.notes?`<div class="exh-notes">“${e.notes}”</div>`:''}
+    </div>`);
+  });
+  if(!rows.length) return '';
+  return `<div class="chart-title" style="margin:14px 0 8px">Session History · ${rows.length}</div>
+    <div class="exh-list">${rows.join('')}</div>`;
 }
 
 function setChartMode(mode){ progChartMode=mode; renderProgress(); }
@@ -1987,6 +2142,7 @@ function renderExercises(){
       </div>
       ${exList.map(ex=>`<div class="mgmt-ex-row" id="mrow-${esc(ex)}">
         <div class="mgmt-ex-name">${ex}</div>
+        <button class="edit-btn" onclick="openExerciseHistory('${ex}')" title="History &amp; progress">📈</button>
         <button class="edit-btn" onclick="startMove('${esc(sec)}','${ex}')" title="Move to another section">↔</button>
         <button class="edit-btn" onclick="startRename('${esc(sec)}','${ex}')" title="Rename">✏️</button>
         <button class="mgmt-del-btn" onclick="removeExercise('${esc(sec)}','${esc(ex)}')">−</button>
@@ -2444,6 +2600,7 @@ function startProgramDay(){
   workoutProgram={programId:p.id,weekIndex:wi,dayIndex:di,dayName:dayLabel(p,programState)};
   builderSelected=new Set(workoutPlan);
   focusIndex=0;
+  builderOpen=false;
   saveDraft(); saveAll();
   buildLog();
   if(needSetup) showToast('Tip: set your '+(p.tmBased?'training maxes':'starting weights')+' via 📚 for auto-prescribed loads');
@@ -2807,6 +2964,7 @@ function dismissSummary() {
   workoutPlan = null;
   workoutProgram = null;
   builderSelected = new Set();
+  builderOpen = false;
   activeSection = '';
   buildLog();
 }
@@ -2839,6 +2997,7 @@ function applyPlan() {
   workoutPlan = [...builderSelected];
   activeSection = '';
   focusIndex = 0;
+  builderOpen = false;
   buildLog();
 }
 
@@ -2929,8 +3088,7 @@ function showToast(msg,ms=2400){
 
 // ── Init ──────────────────────────────────────────────────────
 loadAll();
-buildLog();
-document.getElementById('log-action').style.display='flex';
+buildLog();   // sets the log-action bar visibility itself (hidden on the dashboard)
 updateDurBtns();
 setTimeout(updateBackupLabel, 100);
 
