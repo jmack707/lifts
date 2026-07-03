@@ -479,6 +479,9 @@ body.wip .page.active{padding-bottom:60px;}
 .tmpl-load{background:var(--text);color:#0A0A0F;border:none;border-radius:7px;
   padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer;}
 .tmpl-del{background:none;border:none;color:var(--muted2);font-size:20px;cursor:pointer;padding:2px 8px;}
+.tmpl-intro{font-size:12px;color:var(--muted);line-height:1.5;margin:-6px 0 14px;}
+.tmpl-none{color:var(--muted);font-size:13px;padding:4px 0 14px;}
+.tmpl-hint{font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:10px;}
 .new-tmpl-area{background:var(--s2);border:1px solid var(--border);
   border-radius:10px;padding:12px 14px;}
 .new-tmpl-title{font-size:13px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
@@ -994,13 +997,9 @@ margin-bottom:10px;padding:14px;
   <div class="modal-sheet" onclick="event.stopPropagation()">
     <div class="modal-handle"></div>
     <div class="modal-title">📋 Templates</div>
+    <div class="tmpl-intro">A template is a saved set of exercises for quick starts — tap one to load it into a workout.</div>
     <div id="tmpl-list"></div>
-    <div class="new-tmpl-area">
-      <div class="new-tmpl-title">Save Your Selected Exercises</div>
-      <input class="tmpl-name-input" type="text" id="tmpl-name-input"
-        placeholder="Template name (e.g. Push Day A)" maxlength="40">
-      <button class="tmpl-save-btn" onclick="saveTemplate()">Save Template</button>
-    </div>
+    <div id="tmpl-create"></div>
   </div>
 </div>
 
@@ -2626,15 +2625,18 @@ function calcPlates(){
 // ════════════════════════════════════════════════════════════════
 // TEMPLATES
 // ════════════════════════════════════════════════════════════════
+let tmplSelected = new Set();
 function showTemplates(){
+  // Pre-select from an in-progress workout or the builder picks, if any.
+  tmplSelected = new Set(workoutPlan ? workoutPlan : (builderSelected ? [...builderSelected] : []));
   renderTemplateList();
-  document.getElementById('tmpl-name-input').value='';
+  renderTmplPicker();
   openModal('templates');
 }
 function renderTemplateList(){
   const el=document.getElementById('tmpl-list');
-  if(!templates.length){el.innerHTML='<div style="color:var(--muted);font-size:13px;padding:8px 0 14px">No saved templates yet. Pick exercises on the start screen, then save them here with a name.</div>';return;}
-  el.innerHTML=templates.map(t=>
+  if(!templates.length){el.innerHTML='<div class="tmpl-none">No saved templates yet — build one below.</div>';return;}
+  el.innerHTML=`<div class="new-tmpl-title">Your templates</div>`+templates.map(t=>
     `<div class="tmpl-card">
       <div class="tmpl-info">
         <div class="tmpl-name-lbl">${t.name}</div>
@@ -2645,16 +2647,41 @@ function renderTemplateList(){
     </div>`
   ).join('');
 }
+// Inline picker so a template can be built from your exercises without the builder.
+function renderTmplPicker(){
+  const el=document.getElementById('tmpl-create');
+  const allEx=sections.flatMap(s=>exercises[s]||[]);
+  if(!allEx.length){
+    el.innerHTML=`<div class="new-tmpl-area">
+      <div class="new-tmpl-title">Create a template</div>
+      <div class="tmpl-hint">Your exercise list is empty. Add exercises from the library first, then come back to build a template from them.</div>
+      <button class="tmpl-save-btn" onclick="closeModal('templates');showLibrary()">🔍 Browse exercise library</button>
+    </div>`;
+    return;
+  }
+  const prevName=(document.getElementById('tmpl-name-input')?.value)||'';
+  const pills=allEx.map(ex=>`<div class="start-pill ${tmplSelected.has(ex)?'on custom':''}" onclick="toggleTmplEx('${esc(ex)}')">${ex}</div>`).join('');
+  el.innerHTML=`<div class="new-tmpl-area">
+    <div class="new-tmpl-title">Create a template</div>
+    <div class="tmpl-hint">Tap exercises to include — <b>${tmplSelected.size}</b> selected.</div>
+    <div class="start-ex-grid" style="margin-bottom:12px">${pills}</div>
+    <input class="tmpl-name-input" type="text" id="tmpl-name-input" placeholder="Template name (e.g. Push Day A)" maxlength="40">
+    <button class="tmpl-save-btn" onclick="saveTemplate()">Save Template</button>
+  </div>`;
+  const ni=document.getElementById('tmpl-name-input'); if(ni) ni.value=prevName;
+}
+function toggleTmplEx(ex){
+  if(tmplSelected.has(ex)) tmplSelected.delete(ex); else tmplSelected.add(ex);
+  renderTmplPicker();
+}
 function saveTemplate(){
-  const name=document.getElementById('tmpl-name-input').value.trim();
-  if(!name){showToast('Enter a template name');return;}
-  // Save whatever is currently selected: the active workout, or the start-screen picks
-  const exList = workoutPlan ? [...workoutPlan]
-               : (builderSelected && builderSelected.size ? [...builderSelected] : []);
-  if(!exList.length){showToast('Pick some exercises first, then save');return;}
-  templates.push({id:Date.now().toString(),name,exercises:exList});
-  saveAll(); renderTemplateList();
-  document.getElementById('tmpl-name-input').value='';
+  const name=(document.getElementById('tmpl-name-input')?.value||'').trim();
+  if(!tmplSelected.size){showToast('Tap some exercises to include');return;}
+  if(!name){showToast('Name your template');return;}
+  templates.push({id:Date.now().toString(),name,exercises:[...tmplSelected]});
+  saveAll();
+  tmplSelected=new Set();
+  renderTemplateList(); renderTmplPicker();
   showToast('Template saved: '+name);
 }
 function loadTemplate(id){
