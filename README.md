@@ -12,6 +12,7 @@ A simple, private workout tracker that runs entirely in your browser. No account
 - **Supersets, RPE targets, rep ranges & timed holds** — antagonist pairs are grouped with short rest, sets can prescribe a rep range and an RPE/reps-in-reserve target, and planks/holds are logged in seconds
 - **Home dashboard** — open to your stats (streak, weekly count, total sessions), a "next workout" hero that starts your program in one tap, quick actions, and recent activity
 - **Per-exercise history** — every logged session for an exercise (sets, est. 1RM, PRs, notes) alongside its progress charts; open it from the 📈 button in the Exercises tab
+- **Save from anywhere** — while a workout is in progress, a bar on every other tab lets you jump back (Resume) or log it (Save) without hunting for the button; the Home tab itself shows as "Workout" mid-session
 - **Focus mode** — during a workout, one exercise (or superset pair) fills the screen with a progress header and an "up next" rail; it auto-advances as you finish. Toggle to the full list anytime (☰)
 - **Prescribed sets** — the app pre-fills each set's target weight and reps from your working weight (or a percentage of your training max for 5/3/1); AMRAP sets are flagged
 - **Automatic progression** — hit all your sets and the weight goes up next session; miss it a few times and it deloads. 5/3/1 runs its 4-week wave off a training max that rises each cycle — all handled for you

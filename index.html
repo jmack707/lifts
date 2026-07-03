@@ -312,6 +312,22 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);
 .exh-metric{font-family:'DM Mono',monospace;font-size:11px;margin-top:2px;}
 .exh-notes{font-size:11px;color:var(--muted);font-style:italic;margin-top:3px;}
 
+/* ── Workout-in-progress bar (cross-tab) ── */
+.wip-bar{position:fixed;left:0;right:0;bottom:calc(var(--nav) + env(safe-area-inset-bottom));
+  background:var(--s1);border-top:1px solid rgba(155,114,207,.45);display:none;align-items:center;
+  gap:10px;padding:9px 12px;z-index:75;box-shadow:0 -6px 18px rgba(0,0,0,.35);}
+.wip-bar.show{display:flex;}
+.wip-ic{font-size:20px;flex-shrink:0;}
+.wip-txt{flex:1;font-size:13px;font-weight:700;color:var(--purple);line-height:1.2;min-width:0;}
+.wip-sub{font-size:11px;font-weight:500;color:var(--muted);margin-top:1px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.wip-resume{background:var(--s2);border:1px solid var(--border2);border-radius:8px;color:var(--text);
+  font-size:12px;font-weight:700;padding:9px 12px;cursor:pointer;flex-shrink:0;}
+.wip-save{background:var(--purple);border:none;border-radius:8px;color:#fff;
+  font-size:12px;font-weight:700;padding:9px 14px;cursor:pointer;flex-shrink:0;}
+.wip-save:active,.wip-resume:active{filter:brightness(1.15);}
+body.wip .page.active{padding-bottom:60px;}
+
 /* ── Programs ── */
 .prog-active-card{margin:2px 0 6px;padding:12px 14px;border-radius:var(--r);
   background:rgba(155,114,207,.1);border:1px solid rgba(155,114,207,.28);}
@@ -866,6 +882,14 @@ margin-bottom:10px;padding:14px;
   </div>
 </div>
 
+<!-- WORKOUT-IN-PROGRESS BAR (shown on other tabs while a workout is active) -->
+<div class="wip-bar" id="wip-bar">
+  <div class="wip-ic">🏋️</div>
+  <div class="wip-txt">Workout in progress<div class="wip-sub" id="wip-sub"></div></div>
+  <button class="wip-resume" onclick="switchTab('log')">Resume</button>
+  <button class="wip-save" onclick="logWorkout()">Save ✓</button>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <!-- SESSION SUMMARY -->
@@ -1223,6 +1247,22 @@ function switchTab(tab) {
   if(tab==='history')   renderHistory();
   if(tab==='progress')  renderProgress();
   if(tab==='exercises') renderExercises();
+  updateWipBar();
+}
+
+// Cross-tab "workout in progress" bar with Resume + Save, shown everywhere
+// except the workout tab itself (which has its own End / LOG WORKOUT bar).
+function updateWipBar(){
+  const bar=document.getElementById('wip-bar');
+  if(!bar) return;
+  const show = !!workoutPlan && activeTab!=='log';
+  bar.classList.toggle('show', show);
+  document.body.classList.toggle('wip', show);
+  if(show){
+    const n=workoutPlan.length;
+    document.getElementById('wip-sub').textContent =
+      workoutProgram ? workoutProgram.dayName : `${n} exercise${n!==1?'s':''}`;
+  }
 }
 
 // ════════════════════════════════════════════════════════════════
@@ -2977,7 +3017,7 @@ function dismissSummary() {
   builderSelected = new Set();
   builderOpen = false;
   activeSection = '';
-  buildLog();
+  switchTab('log');   // land back on Home (also clears the in-progress bar)
 }
 
 function showConfetti() {
