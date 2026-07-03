@@ -2805,7 +2805,7 @@ function applyProgression(){
 // ════════════════════════════════════════════════════════════════
 // EXERCISE LIBRARY  (data: ExerciseDB via hasaneyldrm/exercises-dataset)
 // ════════════════════════════════════════════════════════════════
-let EXLIB=null, HOWTO=null, libBP='', libShown=[];
+let EXLIB=null, HOWTO=null, HOWTO_LC=null, libBP='', libShown=[];
 const LIB_MAX=60;
 const BP_SECTION={ Core:'Core', Chest:'Upper Body', Back:'Upper Body', Shoulders:'Upper Body',
   Arms:'Upper Body', Legs:'Lower Body', Other:'Upper Body' };
@@ -2901,7 +2901,14 @@ async function showExInfo(rec){
   openModal('exinfo');
   try{
     const how=await loadHowTo();
-    const entry=how[rec.n]||{};
+    // Resolve by exact name, falling back to a case-insensitive match so
+    // exercises stored under a different casing still find their how-to.
+    let entry=how[rec.n];
+    if(!entry){
+      if(!HOWTO_LC){ HOWTO_LC={}; for(const k in how) HOWTO_LC[k.toLowerCase()]=how[k]; }
+      entry=HOWTO_LC[String(rec.n).toLowerCase()];
+    }
+    entry=entry||{};
     const imgs=entry.imgs||[], steps=entry.steps||[];
     if(imgs.length) document.getElementById('exinfo-imgs').innerHTML=
       `<div class="exinfo-imgs">${imgs.map(p=>`<img class="exinfo-img" loading="lazy" src="${IMG_BASE}${htmlEsc(p)}" onerror="this.remove()" alt="">`).join('')}</div>`;
