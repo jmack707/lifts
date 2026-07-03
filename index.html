@@ -348,6 +348,11 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);
 body.wip .page.active{padding-bottom:60px;}
 
 /* ── Exercise library ── */
+.lib-eq-sel{width:100%;background:var(--s2);border:1px solid var(--border);border-radius:10px;
+  color:var(--text);font-size:14px;font-weight:600;padding:10px 12px;outline:none;margin-bottom:10px;
+  text-transform:capitalize;-webkit-appearance:none;appearance:none;cursor:pointer;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236A6A88' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 12px center;}
 .lib-filters{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:10px;}
 .lib-filters::-webkit-scrollbar{display:none;}
 .lib-chip{flex:0 0 auto;padding:6px 12px;border-radius:16px;font-size:11px;font-weight:700;
@@ -957,7 +962,8 @@ margin-bottom:10px;padding:14px;
   <div class="modal-sheet" onclick="event.stopPropagation()">
     <div class="modal-handle"></div>
     <div class="modal-title">🔍 Exercise Library</div>
-    <input class="tmpl-name-input" id="lib-search" placeholder="Search exercises…" oninput="renderLibrary()" style="margin-bottom:10px">
+    <input class="tmpl-name-input" id="lib-search" placeholder="Search exercises…" oninput="renderLibrary()" style="margin-bottom:8px">
+    <select class="lib-eq-sel" id="lib-eq" onchange="setLibEq(this.value)"></select>
     <div class="lib-filters" id="lib-filters"></div>
     <div id="lib-results"></div>
     <div class="lib-credit">Exercise data &amp; images from <b>free-exercise-db</b> (yuhonas) — public domain (Unlicense), originally from Everkinetic.</div>
@@ -2997,7 +3003,7 @@ function applyProgression(){
 // ════════════════════════════════════════════════════════════════
 // EXERCISE LIBRARY  (data: ExerciseDB via hasaneyldrm/exercises-dataset)
 // ════════════════════════════════════════════════════════════════
-let EXLIB=null, HOWTO=null, HOWTO_LC=null, libBP='', libShown=[];
+let EXLIB=null, HOWTO=null, HOWTO_LC=null, libBP='', libEq='', libShown=[];
 const LIB_MAX=60;
 const BP_SECTION={ Core:'Core', Chest:'Upper Body', Back:'Upper Body', Shoulders:'Upper Body',
   Arms:'Upper Body', Legs:'Lower Body', Other:'Upper Body' };
@@ -3010,9 +3016,10 @@ async function loadExLib(){ if(EXLIB) return EXLIB; const r=await fetch('data/ex
 async function loadHowTo(){ if(HOWTO) return HOWTO; const r=await fetch('data/how-to.json'); if(!r.ok) throw 0; HOWTO=await r.json(); return HOWTO; }
 
 async function showLibrary(){
-  libBP='';
+  libBP=''; libEq='';
   document.getElementById('lib-search').value='';
   document.getElementById('lib-filters').innerHTML='';
+  document.getElementById('lib-eq').innerHTML='';
   document.getElementById('lib-results').innerHTML='<div class="lib-empty">Loading library…</div>';
   openModal('library');
   try{
@@ -3021,6 +3028,10 @@ async function showLibrary(){
     document.getElementById('lib-filters').innerHTML=
       `<button class="lib-chip on" onclick="setLibBP('')">All</button>`+
       bps.map(bp=>`<button class="lib-chip" onclick="setLibBP('${bp}')">${bp}</button>`).join('');
+    const eqs=[...new Set(EXLIB.map(e=>e.eq))].sort();
+    document.getElementById('lib-eq').innerHTML=
+      `<option value="">All equipment</option>`+
+      eqs.map(eq=>`<option value="${htmlEsc(eq)}">${htmlEsc(eq)}</option>`).join('');
     renderLibrary();
   }catch(e){
     document.getElementById('lib-results').innerHTML=
@@ -3032,11 +3043,13 @@ function setLibBP(bp){
   document.querySelectorAll('#lib-filters .lib-chip').forEach(c=>c.classList.toggle('on', c.textContent===(bp||'All')));
   renderLibrary();
 }
+function setLibEq(eq){ libEq=eq; renderLibrary(); }
 function renderLibrary(){
   if(!EXLIB) return;
   const q=(document.getElementById('lib-search').value||'').toLowerCase().trim();
   let list=EXLIB;
   if(libBP) list=list.filter(e=>e.bp===libBP);
+  if(libEq) list=list.filter(e=>e.eq===libEq);
   if(q) list=list.filter(e=>e.n.toLowerCase().includes(q)||(e.t||'').toLowerCase().includes(q)||(e.eq||'').toLowerCase().includes(q)||(e.s||[]).some(m=>m.toLowerCase().includes(q)));
   const total=list.length;
   libShown=list.slice(0,LIB_MAX);

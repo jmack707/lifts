@@ -1,5 +1,5 @@
 // Lifts service worker — caches the app shell so it works fully offline.
-const CACHE = 'lifts-v15';
+const CACHE = 'lifts-v16';
 const ASSETS = [
   './',
   './index.html',
