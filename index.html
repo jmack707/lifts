@@ -1998,9 +1998,9 @@ function setParts(ex, i){
   const wCell = s.hold
     ? `<button class="hold-btn" onclick="startHold('${ex}',${i})" title="Start hold timer">▶ ${parseInt(s.r)||s.hold||30}s</button>`
     : `<input type="number" inputmode="decimal" placeholder="${s.warm?'warm':s.noload?'opt':(bw?settings.bw+' bw':U())}"
-        class="set-input" value="${s.w}" data-ex="${ex}" data-set="${i}" data-t="w" oninput="onInput(this)">`;
+        class="set-input" value="${s.w}" data-ex="${ex}" data-set="${i}" data-t="w" oninput="onInput(this)" onchange="onSetCommit(this)">`;
   const rInput = `<input type="number" inputmode="numeric" placeholder="${s.hold?'secs':s.amrap?'AMRAP':'reps'}"
-      class="set-input" value="${s.r}" data-ex="${ex}" data-set="${i}" data-t="r" oninput="onInput(this)">`;
+      class="set-input" value="${s.r}" data-ex="${ex}" data-set="${i}" data-t="r" oninput="onInput(this)" onchange="onSetCommit(this)">`;
   let target='';
   if(!s.warm){
     if(s.hold) target=`hold ${s.hold}s`;
@@ -2171,6 +2171,23 @@ function onInput(el) {
   saveDraft(); calcCard(ex);
 }
 
+// Committing a set's weight or reps field (blur / Enter) completes the set —
+// same as tapping the ○ circle — so the rest timer starts without a second tap.
+// Fires once both weight and reps are present (reps alone for bodyweight moves);
+// warm-ups and timed holds are left alone.
+let _autoDoneKey='', _autoDoneAt=0;
+function onSetCommit(el){
+  const ex=el.dataset.ex, i=parseInt(el.dataset.set);
+  const d=getDraft(ex), s=d.sets[i];
+  if(!s || s.done || s.warm || s.hold) return;
+  const r=parseFloat(s.r)||0;
+  if(r<=0) return;                                 // need reps logged
+  const noWeight = s.noload || (d.scheme && d.scheme.bw);
+  if(!noWeight && !(parseFloat(s.w)>0)) return;    // weighted lifts need a weight too
+  toggleDone(ex, i);                               // check it done + start rest (if auto-rest on)
+  _autoDoneKey=ex+'|'+i; _autoDoneAt=Date.now();   // guard the stray circle-click from the same tap
+}
+
 function onNotes(ex, ta) {
   const d=getDraft(ex); d.notes=ta.value; saveDraft();
   const ke=esc(ex);
@@ -2185,6 +2202,9 @@ function toggleNotes(ex) {
 }
 
 function toggleDone(ex, i) {
+  // Ignore the circle-click that immediately follows an auto-complete from the
+  // reps field (same tap blurs the input, then clicks the circle).
+  if(_autoDoneKey===ex+'|'+i && Date.now()-_autoDoneAt<500){ _autoDoneKey=''; return; }
   const d=getDraft(ex);
   d.sets[i].done = !d.sets[i].done;
   saveDraft();
