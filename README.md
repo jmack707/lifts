@@ -8,9 +8,9 @@ A simple, private workout tracker that runs entirely in your browser. No account
 
 ## Features
 
-- **Programs** — follow a structured routine (StrongLifts 5×5, GZCLP built in) that rotates through workout days and tells you exactly what to lift next
-- **Prescribed sets** — the app pre-fills each set's target weight and reps from your working weight; AMRAP sets are flagged
-- **Automatic progression** — hit all your sets and the weight goes up next session; miss it a few times and it deloads — all handled for you
+- **Programs** — follow a structured routine (StrongLifts 5×5, GZCLP, and 5/3/1 built in) that rotates through workout days and tells you exactly what to lift next
+- **Prescribed sets** — the app pre-fills each set's target weight and reps from your working weight (or a percentage of your training max for 5/3/1); AMRAP sets are flagged
+- **Automatic progression** — hit all your sets and the weight goes up next session; miss it a few times and it deloads. 5/3/1 runs its 4-week wave off a training max that rises each cycle — all handled for you
 - **Plan your own workout** — or pick exercises freely, in the order you want them
 - **Log sets** — weight and reps for each set, with add/remove set and one-tap complete
 - **Warm-up sets** — one tap builds a bar → 50/70/90% ramp toward your working weight, rounded to loadable plates

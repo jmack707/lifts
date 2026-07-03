@@ -834,12 +834,12 @@ margin-bottom:10px;padding:14px;
       <div class="help-item">
         <div class="help-icon">📚</div>
         <div class="help-text"><div class="help-label">Let the app plan for you</div>
-          <div class="help-desc">Tap 📚 at the top and pick a program like StrongLifts 5×5 or GZCLP. Type your starting weight for each lift once. From then on, the start screen shows your next workout day — tap it and every set is pre-filled with the exact weight and reps to do.</div></div>
+          <div class="help-desc">Tap 📚 at the top and pick a program like StrongLifts 5×5, GZCLP, or 5/3/1. Type your starting weight (or training max for 5/3/1) for each lift once. From then on, the start screen shows your next workout day — tap it and every set is pre-filled with the exact weight and reps to do.</div></div>
       </div>
       <div class="help-item">
         <div class="help-icon">📈</div>
         <div class="help-text"><div class="help-label">The weight goes up by itself</div>
-          <div class="help-desc">Finish all your sets and log the workout — the app adds weight for next time automatically. Miss your reps a few sessions in a row and it backs the weight off (a "deload") so you can build back up. You'll see the new weights on the finish screen.</div></div>
+          <div class="help-desc">Finish all your sets and log the workout — the app adds weight for next time automatically. Miss your reps a few sessions in a row and it backs the weight off (a "deload") so you can build back up. On 5/3/1, your training max goes up at the end of each 4-week cycle instead. You'll see the new weights on the finish screen.</div></div>
       </div>
       <div class="help-item">
         <div class="help-icon">🔥</div>
@@ -1078,7 +1078,7 @@ function loadAll() {
   if(settings.bar==null) settings.bar = UNIT_DEFAULTS[U()].bar;
   // Seed built-in programs (kept fresh) alongside any user programs.
   const userPrograms = (programs||[]).filter(p=>!p.builtin);
-  programs = [...JSON.parse(JSON.stringify(BUILTIN_PROGRAMS)), ...userPrograms];
+  programs = [...builtinPrograms(), ...userPrograms];
   document.getElementById('workout-date').value = workoutDate;
   updateDateDisplay();
 }
@@ -1218,18 +1218,14 @@ function renderStartScreen() {
 
   const activeProg = currentProgram();
   if(activeProg){
-    const di = programState.dayIndex||0;
-    const day = activeProg.days[di];
-    const preview = day.exercises.map(de=>{
-      const m=exMeta[de.ex]; const w=m&&m.weight>0?` ${m.weight}${U()}`:'';
-      return `${de.ex} ${schemeLabel(de.scheme)}${w}`;
-    }).join(' · ');
+    const day = getProgramDay(activeProg, programState);
+    const preview = day.exercises.map(de=>`${de.ex} ${topSetLabel(de)}`).join(' · ');
     html += `<div class="prog-active-card">
       <div class="prog-active-top">
         <div class="prog-active-name">📚 ${activeProg.name}</div>
         <button class="prog-mini-btn" onclick="showPrograms()" title="Manage program">⚙</button>
       </div>
-      <div class="prog-active-day">Next: ${day.name}</div>
+      <div class="prog-active-day">Next: ${dayLabel(activeProg, programState)}</div>
       <div class="prog-active-ex">${preview}</div>
       <button class="prog-start-btn" onclick="startProgramDay()">START ${day.name.toUpperCase()}</button>
     </div>`;
@@ -2004,7 +2000,71 @@ function deleteTemplate(id){
 // PROGRAMS  (structured weeks/days · prescribed sets · progression)
 // ════════════════════════════════════════════════════════════════
 function currentProgram(){ return programState ? (programs||[]).find(p=>p.id===programState.programId) : null; }
-function schemeLabel(sc){ return `${sc.sets}×${sc.reps}${sc.amrap?'+':''}`; }
+function schemeLabel(sc){
+  if(sc.setList) return sc.setList.map(s=>s.reps+(s.amrap?'+':'')).join('/');
+  return `${sc.sets}×${sc.reps}${sc.amrap?'+':''}`;
+}
+
+// ── Program shape helpers (support both flat `days` and `weeks`) ──────────────
+// A program is either a flat day rotation (linear progression) or a weeks×days
+// wave (percentage-of-training-max, e.g. 5/3/1) flagged with `tmBased`.
+function getProgramDay(p, state){
+  if(!p||!state) return null;
+  if(p.weeks){ const w=p.weeks[state.weekIndex||0]; return w && w.days[state.dayIndex||0]; }
+  return p.days[state.dayIndex||0];
+}
+function dayLabel(p, state){
+  const d=getProgramDay(p,state); if(!d) return '';
+  return p.weeks ? `${p.weeks[state.weekIndex||0].name} · ${d.name}` : d.name;
+}
+function programDayCount(p){ return p.weeks ? p.weeks.reduce((n,w)=>n+w.days.length,0) : p.days.length; }
+// Unique exercise definitions across the whole program.
+function programExercises(p){
+  const days = p.weeks ? p.weeks.flatMap(w=>w.days) : p.days;
+  const seen=new Set(), out=[];
+  days.forEach(d=>d.exercises.forEach(de=>{ if(!seen.has(de.ex)){ seen.add(de.ex); out.push(de);} }));
+  return out;
+}
+// Heaviest prescribed set for previews (resolves %-of-TM to a real weight).
+function topSetLabel(de){
+  const m=exMeta[de.ex], sc=de.scheme;
+  if(sc.setList){
+    const top=sc.setList[sc.setList.length-1];
+    if(m&&m.weight>0) return `${roundLoadable(m.weight*top.pct/100)} ${U()}×${top.reps}${top.amrap?'+':''}`;
+    return `${top.pct}%×${top.reps}${top.amrap?'+':''}`;
+  }
+  if(m&&m.weight>0) return `${m.weight} ${U()}×${sc.reps}`;
+  return `${sc.sets}×${sc.reps}`;
+}
+
+// ── 5/3/1 (Wendler) — a 4-week wave on a Training Max, one main lift per day ──
+function build531(){
+  const lifts=[
+    {ex:'Overhead Press', start:{lb:85,kg:40},   inc:{lb:5, kg:2.5}},
+    {ex:'Deadlift',       start:{lb:225,kg:100}, inc:{lb:10,kg:5}},
+    {ex:'Bench Press',    start:{lb:135,kg:60},  inc:{lb:5, kg:2.5}},
+    {ex:'Back Squat',     start:{lb:185,kg:85},  inc:{lb:10,kg:5}}
+  ];
+  const weeksDef=[
+    {name:'Week 1 · 5s',    sets:[[65,5],[75,5],[85,5,true]]},
+    {name:'Week 2 · 3s',    sets:[[70,3],[80,3],[90,3,true]]},
+    {name:'Week 3 · 5/3/1', sets:[[75,5],[85,3],[95,1,true]]},
+    {name:'Week 4 · Deload',sets:[[40,5],[50,5],[60,5]]}
+  ];
+  return {
+    id:'wendler531', name:'5/3/1', builtin:true, tmBased:true, section:'Lower Body',
+    weeks: weeksDef.map(w=>({
+      name:w.name,
+      days: lifts.map(l=>({
+        name:l.ex,
+        exercises:[{ ex:l.ex, start:l.start, inc:l.inc,
+          scheme:{ tm:true, setList:w.sets.map(([pct,reps,amrap])=>({pct,reps,amrap:!!amrap})) } }]
+      }))
+    }))
+  };
+}
+// Fresh copies of all built-ins (deep-cloned linear ones + the generated 5/3/1).
+function builtinPrograms(){ return [...JSON.parse(JSON.stringify(BUILTIN_PROGRAMS)), build531()]; }
 
 // Make sure a program's exercise exists in the section list so it shows up
 // everywhere (log, history, progress). Adds it to the program's home section.
@@ -2023,34 +2083,53 @@ function renderProgramsModal(){
   const active=currentProgram();
   let html='';
   if(active){
-    const di=programState.dayIndex||0;
-    const day=active.days[di];
+    const wi=programState.weekIndex||0, di=programState.dayIndex||0;
+    const day=getProgramDay(active, programState);
     html+=`<div class="prog-card on">
       <div class="prog-info">
         <div class="prog-name-lbl">${active.name} <span style="color:var(--purple)">· active</span></div>
-        <div class="prog-day-preview">Next up: ${day.name} — ${day.exercises.map(e=>e.ex).join(', ')}</div>
+        <div class="prog-day-preview">Next up: ${dayLabel(active, programState)} — ${day.exercises.map(e=>e.ex).join(', ')}</div>
       </div>
     </div>
     <div style="display:flex;gap:8px;margin:6px 0 16px">
-      <button class="prog-act-btn" style="flex:1" onclick="renderProgramSetup('${active.id}')">Edit weights</button>
+      <button class="prog-act-btn" style="flex:1" onclick="renderProgramSetup('${active.id}')">Edit ${active.tmBased?'training maxes':'weights'}</button>
       <button class="prog-act-btn ghost" style="flex:1" onclick="deactivateProgram()">Stop program</button>
-    </div>
-    <div class="prog-day-preview" style="padding-bottom:8px">Jump to a day:</div>
-    <div class="prog-list">${active.days.map((d,i)=>
-      `<div class="prog-card ${i===di?'on':''}">
-        <div class="prog-info"><div class="prog-name-lbl">${d.name}</div>
-          <div class="prog-day-preview">${d.exercises.map(e=>e.ex+' '+schemeLabel(e.scheme)).join(' · ')}</div></div>
-        <button class="prog-act-btn ${i===di?'':'ghost'}" onclick="setProgramDay(${i})">${i===di?'Next':'Set'}</button>
-      </div>`).join('')}</div>`;
+    </div>`;
+    if(active.weeks){
+      html+=`<div class="prog-day-preview" style="padding-bottom:8px">Jump to any day in the ${active.weeks.length}-week wave:</div>`;
+      active.weeks.forEach((wk,wj)=>{
+        html+=`<div class="prog-sec-lbl" style="color:var(--purple);padding:8px 2px 6px">${wk.name}</div><div class="prog-list">`;
+        wk.days.forEach((d,dj)=>{
+          const cur=wj===wi&&dj===di;
+          html+=`<div class="prog-card ${cur?'on':''}">
+            <div class="prog-info"><div class="prog-name-lbl">${d.name}</div>
+              <div class="prog-day-preview">${d.exercises.map(e=>e.ex+' '+schemeLabel(e.scheme)).join(' · ')}</div></div>
+            <button class="prog-act-btn ${cur?'':'ghost'}" onclick="setProgramDay(${dj},${wj})">${cur?'Next':'Set'}</button>
+          </div>`;
+        });
+        html+='</div>';
+      });
+    } else {
+      html+=`<div class="prog-day-preview" style="padding-bottom:8px">Jump to a day:</div>`;
+      html+=`<div class="prog-list">${active.days.map((d,i)=>
+        `<div class="prog-card ${i===di?'on':''}">
+          <div class="prog-info"><div class="prog-name-lbl">${d.name}</div>
+            <div class="prog-day-preview">${d.exercises.map(e=>e.ex+' '+schemeLabel(e.scheme)).join(' · ')}</div></div>
+          <button class="prog-act-btn ${i===di?'':'ghost'}" onclick="setProgramDay(${i})">${i===di?'Next':'Set'}</button>
+        </div>`).join('')}</div>`;
+    }
   }
   html+=`<div class="prog-day-preview" style="padding:${active?'16px':'0'} 0 8px">${active?'Switch to another program:':'Pick a program to follow:'}</div>`;
   html+='<div class="prog-list">';
   (programs||[]).forEach(p=>{
     if(active && p.id===active.id) return;
+    const desc = p.weeks
+      ? `${p.weeks.length}-week wave · ${programExercises(p).length} lifts · training-max based`
+      : `${p.days.length} day rotation · ${p.days.map(d=>d.name).join(', ')}`;
     html+=`<div class="prog-card">
       <div class="prog-info">
         <div class="prog-name-lbl">${p.name}${p.builtin?'':' <span style="color:var(--muted)">· custom</span>'}</div>
-        <div class="prog-day-preview">${p.days.length} day rotation · ${p.days.map(d=>d.name).join(', ')}</div>
+        <div class="prog-day-preview">${desc}</div>
       </div>
       <button class="prog-act-btn" onclick="activateProgram('${p.id}')">Use</button>
     </div>`;
@@ -2062,13 +2141,13 @@ function renderProgramsModal(){
 // Activate → seed exMeta from the program's starting weights, then confirm weights.
 function activateProgram(id){
   const p=(programs||[]).find(p=>p.id===id); if(!p) return;
-  programState={programId:id,dayIndex:0};
-  p.days.forEach(day=>day.exercises.forEach(de=>{
+  programState={programId:id,weekIndex:0,dayIndex:0};
+  programExercises(p).forEach(de=>{
     ensureExercise(de.ex, p.section);
     if(!exMeta[de.ex]){
       exMeta[de.ex]={weight:(de.start&&de.start[U()])||0, inc:(de.inc&&de.inc[U()])||minStep(), fails:0};
     }
-  }));
+  });
   saveAll();
   renderProgramSetup(id);
 }
@@ -2076,17 +2155,20 @@ function activateProgram(id){
 function renderProgramSetup(id){
   const p=(programs||[]).find(p=>p.id===id); if(!p) return;
   const body=document.getElementById('prog-modal-body');
-  // Unique exercises across the program's days.
-  const seen=new Set(); const list=[];
-  p.days.forEach(day=>day.exercises.forEach(de=>{ if(!seen.has(de.ex)){ seen.add(de.ex); list.push(de);} }));
+  const list=programExercises(p);
+  const tm=p.tmBased;
   let html=`<div class="prog-day-preview" style="padding-bottom:10px">
-    Set your starting working weight for each lift (${U()}). The app prescribes these
-    each session and adjusts them automatically as you progress.</div>`;
+    ${tm
+      ? `Enter your <b>Training Max</b> for each lift (${U()}) — about 90% of your 1-rep max.
+         Every set is a percentage of it, and your TM rises automatically after each 4-week cycle.`
+      : `Set your starting working weight for each lift (${U()}). The app prescribes these
+         each session and adjusts them automatically as you progress.`}</div>`;
   list.forEach(de=>{
     const m=exMeta[de.ex]||{weight:0,inc:minStep()};
+    const sub = tm ? `+${m.inc||minStep()} ${U()}/cycle` : `${schemeLabel(de.scheme)} · +${m.inc||minStep()} ${U()}/session`;
     html+=`<div class="prog-setup-row">
-      <div class="prog-setup-name">${de.ex}<div style="font-size:10px;color:var(--muted);font-weight:400">${schemeLabel(de.scheme)} · +${m.inc||minStep()} ${U()}/session</div></div>
-      <input class="prog-setup-input" type="number" inputmode="decimal" id="pw-${esc(de.ex)}" value="${m.weight||''}" placeholder="${U()}">
+      <div class="prog-setup-name">${de.ex}<div style="font-size:10px;color:var(--muted);font-weight:400">${sub}</div></div>
+      <input class="prog-setup-input" type="number" inputmode="decimal" id="pw-${esc(de.ex)}" value="${m.weight||''}" placeholder="${tm?'TM '+U():U()}">
     </div>`;
   });
   html+=`<div style="padding-top:16px"><button class="tmpl-save-btn" onclick="saveProgramSetup('${id}')">Save & Start Program</button></div>`;
@@ -2095,14 +2177,12 @@ function renderProgramSetup(id){
 
 function saveProgramSetup(id){
   const p=(programs||[]).find(p=>p.id===id); if(!p) return;
-  const seen=new Set();
-  p.days.forEach(day=>day.exercises.forEach(de=>{
-    if(seen.has(de.ex)) return; seen.add(de.ex);
+  programExercises(p).forEach(de=>{
     const inp=document.getElementById('pw-'+esc(de.ex));
     const w=inp?parseFloat(inp.value)||0:0;
     exMeta[de.ex]=exMeta[de.ex]||{inc:(de.inc&&de.inc[U()])||minStep(),fails:0};
     exMeta[de.ex].weight=w;
-  }));
+  });
   saveAll(); closeModal('programs');
   if(!workoutPlan) buildLog();
   showToast('Program ready — start your next day from the Log tab');
@@ -2114,31 +2194,39 @@ function deactivateProgram(){
   if(!workoutPlan) buildLog();
 }
 
-function setProgramDay(i){
+function setProgramDay(di, wi){
   if(!programState) return;
-  programState.dayIndex=i; saveAll(); renderProgramsModal();
+  programState.dayIndex=di;
+  if(wi!=null) programState.weekIndex=wi;
+  saveAll(); renderProgramsModal();
   if(!workoutPlan) buildLog();
 }
 
 // Pre-fill an exercise's draft with its prescribed sets (target weight + reps).
+// Linear schemes use exMeta.weight directly; %-schemes resolve each set off the TM.
 function prescribeDraft(ex, scheme){
   const m=exMeta[ex]||{weight:0};
-  const w=m.weight>0?m.weight:'';
-  draft[ex]={
-    notes:'', prescribed:true, scheme,
-    sets:Array.from({length:scheme.sets},(_,i)=>({
-      w:w, r:scheme.reps, done:false,
-      tw:(m.weight>0?m.weight:0), tr:scheme.reps,
+  let defs;
+  if(scheme.setList){
+    defs=scheme.setList.map(s=>{
+      const w = m.weight>0 ? roundLoadable(m.weight*s.pct/100) : '';
+      return { w, r:s.reps, done:false, tw:(w||0), tr:s.reps, amrap:!!s.amrap };
+    });
+  } else {
+    const w=m.weight>0?m.weight:'';
+    defs=Array.from({length:scheme.sets},(_,i)=>({
+      w, r:scheme.reps, done:false, tw:(m.weight>0?m.weight:0), tr:scheme.reps,
       amrap:!!(scheme.amrap && i===scheme.sets-1)
-    }))
-  };
+    }));
+  }
+  draft[ex]={ notes:'', prescribed:true, scheme, sets:defs };
 }
 
 // Start the current program day → build the plan, prescribe every lift.
 function startProgramDay(){
   const p=currentProgram(); if(!p){ showToast('No active program'); return; }
-  const di=programState.dayIndex||0;
-  const day=p.days[di];
+  const wi=programState.weekIndex||0, di=programState.dayIndex||0;
+  const day=getProgramDay(p, programState);
   const needSetup=day.exercises.some(de=>!exMeta[de.ex]||!(exMeta[de.ex].weight>0));
   day.exercises.forEach(de=>{
     ensureExercise(de.ex, p.section);
@@ -2146,20 +2234,51 @@ function startProgramDay(){
     prescribeDraft(de.ex, de.scheme);
   });
   workoutPlan=day.exercises.map(de=>de.ex);
-  workoutProgram={programId:p.id,dayIndex:di,dayName:day.name};
+  workoutProgram={programId:p.id,weekIndex:wi,dayIndex:di,dayName:dayLabel(p,programState)};
   builderSelected=new Set(workoutPlan);
   saveDraft(); saveAll();
   buildLog();
-  if(needSetup) showToast('Tip: set starting weights via 📚 for auto-prescribed loads');
+  if(needSetup) showToast('Tip: set your '+(p.tmBased?'training maxes':'starting weights')+' via 📚 for auto-prescribed loads');
 }
 
-// After logging a program day: progress each lift and advance the rotation.
+// After logging a program day: progress the lifts and advance to the next day.
 function applyProgression(){
   if(!workoutProgram) return [];
   const p=(programs||[]).find(p=>p.id===workoutProgram.programId);
-  const day=p&&p.days[workoutProgram.dayIndex];
+  const day=getProgramDay(p, workoutProgram);
   if(!day) return [];
   const msgs=[];
+
+  if(p.tmBased){
+    // Training-max programs (5/3/1): report the AMRAP top set, keep the TM until
+    // the 4-week cycle completes, then bump every lift's TM by its increment.
+    day.exercises.forEach(de=>{
+      const d=draft[de.ex]; if(!d) return;
+      const m=exMeta[de.ex]||{weight:0,inc:minStep(),fails:0};
+      const amrapSet=[...d.sets].reverse().find(s=>!s.warm && s.amrap && parseFloat(s.r)>0);
+      if(amrapSet){
+        const reps=parseFloat(amrapSet.r)||0, tgt=amrapSet.tr||0;
+        msgs.push({ex:de.ex, txt:`top set ${reps} rep${reps===1?'':'s'} @ ${fmtW(parseFloat(amrapSet.w)||m.weight)}`,
+          kind: reps>tgt?'up':(reps>=tgt?'hold':'down')});
+      }
+    });
+    // Advance week/day; detect end of the wave.
+    let wi=workoutProgram.weekIndex||0, di=workoutProgram.dayIndex||0, cycleEnd=false;
+    di++;
+    if(di>=p.weeks[wi].days.length){ di=0; wi++; if(wi>=p.weeks.length){ wi=0; cycleEnd=true; } }
+    programState.weekIndex=wi; programState.dayIndex=di;
+    if(cycleEnd){
+      programExercises(p).forEach(de=>{
+        const m=exMeta[de.ex]||{weight:0,inc:(de.inc&&de.inc[U()])||minStep(),fails:0};
+        const inc=m.inc||(de.inc&&de.inc[U()])||minStep();
+        m.weight=roundLoadable((m.weight||0)+inc); exMeta[de.ex]=m;
+        msgs.push({ex:de.ex, txt:`cycle done · TM +${inc} → ${fmtW(m.weight)}`, kind:'up'});
+      });
+    }
+    return msgs;
+  }
+
+  // Linear programs (StrongLifts, GZCLP): success → +increment, 3 misses → deload.
   day.exercises.forEach(de=>{
     const d=draft[de.ex]; if(!d) return;
     const m=exMeta[de.ex]||{weight:0,inc:minStep(),fails:0};
@@ -2178,7 +2297,6 @@ function applyProgression(){
     }
     exMeta[de.ex]=m;
   });
-  // Advance to the next day in the rotation.
   programState.dayIndex=(workoutProgram.dayIndex+1)%p.days.length;
   return msgs;
 }
@@ -2296,7 +2414,7 @@ function onRestoreFile(input) {
       if(!settings.plates) settings.plates=[...UNIT_DEFAULTS[U()].plates];
       exMeta       = data.wt_exmeta || {};
       programState = data.wt_progstate || null;
-      programs     = [...JSON.parse(JSON.stringify(BUILTIN_PROGRAMS)), ...((data.wt_programs)||[])];
+      programs     = [...builtinPrograms(), ...((data.wt_programs)||[])];
       saveAll(); saveDraft();
       buildLog(); renderExercises();
       showToast(`Restored ${sessions.length} sessions ✓`);
