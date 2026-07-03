@@ -224,6 +224,42 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);
 .ss-badge{font-size:9px;font-weight:700;background:var(--upper);color:#fff;
   padding:1px 6px;border-radius:4px;margin-left:7px;vertical-align:middle;letter-spacing:.03em;}
 
+/* ── Hybrid focus mode ── */
+.focus-hdr{position:sticky;top:0;z-index:40;background:var(--bg);
+  border-bottom:1px solid var(--border);padding:9px 12px 8px;}
+.focus-hdr-row{display:flex;align-items:center;gap:8px;}
+.focus-title{flex:1;font-family:'Bebas Neue',sans-serif;font-size:19px;letter-spacing:.05em;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.focus-count{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-left:8px;letter-spacing:0;}
+.focus-all-btn{background:var(--s2);border:1px solid var(--border);border-radius:8px;
+  color:var(--muted);font-size:12px;font-weight:700;padding:7px 11px;cursor:pointer;flex-shrink:0;}
+.focus-all-btn:active{background:var(--s3);}
+.focus-nav{display:flex;gap:8px;margin-top:8px;}
+.focus-nav-btn{padding:10px;border-radius:10px;border:1px solid var(--border);
+  background:var(--s2);color:var(--muted);font-size:13px;font-weight:700;cursor:pointer;flex:1;}
+.focus-nav-btn:disabled{opacity:.4;}
+.focus-nav-btn.next{flex:2;background:var(--purple);color:#fff;border-color:transparent;
+  font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:.08em;}
+.focus-nav-btn:active{filter:brightness(1.1);}
+.focus-listbar{display:flex;justify-content:flex-end;padding:8px 12px 0;}
+.focus-spacer{height:74px;}
+.focus-rail{position:fixed;left:0;right:0;
+  bottom:calc(var(--nav) + var(--action) + env(safe-area-inset-bottom));
+  background:var(--s1);border-top:1px solid var(--border);
+  padding:8px 10px;display:flex;gap:7px;overflow-x:auto;scrollbar-width:none;z-index:70;}
+.focus-rail::-webkit-scrollbar{display:none;}
+.rail-chip{flex:0 0 auto;min-width:94px;max-width:150px;background:var(--s2);
+  border:1px solid var(--border);border-radius:9px;padding:7px 11px;cursor:pointer;}
+.rail-chip.cur{background:var(--purple);border-color:transparent;}
+.rail-chip.done{background:rgba(62,200,120,.12);border-color:rgba(62,200,120,.3);}
+.rail-chip-name{font-size:11px;font-weight:700;white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis;color:var(--text);}
+.rail-chip.cur .rail-chip-name{color:#fff;}
+.rail-chip.done .rail-chip-name{color:var(--lower);}
+.rail-chip-sub{font-family:'DM Mono',monospace;font-size:9px;margin-top:2px;
+  white-space:nowrap;color:var(--muted);}
+.rail-chip.cur .rail-chip-sub{color:rgba(255,255,255,.85);}
+
 /* ── Programs ── */
 .prog-active-card{margin:2px 0 6px;padding:12px 14px;border-radius:var(--r);
   background:rgba(155,114,207,.1);border:1px solid rgba(155,114,207,.28);}
@@ -865,6 +901,11 @@ margin-bottom:10px;padding:14px;
     <div class="help-section">
       <div class="help-section-title">While You're Working Out</div>
       <div class="help-item">
+        <div class="help-icon">🎯</div>
+        <div class="help-text"><div class="help-label">Focus mode (one exercise at a time)</div>
+          <div class="help-desc">Workouts open with a single exercise filling the screen so you can concentrate on the lift in front of you. Use <b>Next ›</b> or the strip of upcoming exercises along the bottom to move through the session — it also jumps ahead on its own when you finish one. Prefer to see everything at once? Tap <b>☰ All</b> for the full list (and <b>⊡ Focus mode</b> to switch back).</div></div>
+      </div>
+      <div class="help-item">
         <div class="help-icon">⏱️</div>
         <div class="help-text"><div class="help-label">The rest timer</div>
           <div class="help-desc">When you tap a set's circle to finish it, a big countdown pops up so you know when to start your next set. Tap <b>+30s</b> for more time, or <b>Skip</b> to start early. It beeps when time's up.</div></div>
@@ -1073,6 +1114,7 @@ let workoutPlan = null;
 let workoutProgram = null;            // {programId,dayIndex,dayName} when the active workout came from a program
 let workoutDate = new Date().toISOString().slice(0,10);
 let activeSection = '', activeTab = 'log', selectedEx = null, progChartMode = '1rm';
+let focusIndex = 0;   // current unit in the hybrid focus view
 
 function load(key, def) {
   try { const v=localStorage.getItem(key); return v?JSON.parse(v):def; }
@@ -1093,6 +1135,7 @@ function loadAll() {
   if(!settings.unit)   settings.unit = 'lb';
   if(!settings.plates) settings.plates = [...UNIT_DEFAULTS[U()].plates];
   if(settings.bar==null) settings.bar = UNIT_DEFAULTS[U()].bar;
+  if(settings.focusMode===undefined) settings.focusMode = true;
   // Seed built-in programs (kept fresh) alongside any user programs.
   const userPrograms = (programs||[]).filter(p=>!p.builtin);
   programs = [...builtinPrograms(), ...userPrograms];
@@ -1203,39 +1246,103 @@ function buildLog() {
   if(!workoutPlan){
     document.getElementById('sec-pills').innerHTML = '';
     document.getElementById('plan-banner').style.display = 'none';
+    document.getElementById('streak-bar').style.display = '';
     logAction.innerHTML =
       `<button class="log-btn" onclick="applyPlan()">START WORKOUT</button>`;
     renderStartScreen();
     renderStreakBar();
     return;
   }
-  // ── Active workout → flat list in selection order (no section pills) ──
+  // ── Active workout ──
   logAction.innerHTML =
     `<button class="sm-btn" onclick="endWorkout()">End</button>`+
     `<button class="log-btn" onclick="logWorkout()">LOG WORKOUT</button>`;
   document.getElementById('sec-pills').innerHTML = '';
+  document.getElementById('streak-bar').style.display = 'none';   // clear clutter mid-workout
   const body = document.getElementById('log-body');
-  const cardWrap = ex => {
-    const sec = sections.find(s=>(exercises[s]||[]).includes(ex)) || '';
-    const secCls = (SEC_CLS[sec]||'custom')+'-section';
-    return `<div class="${secCls}">${buildCard(sec, ex)}</div>`;
-  };
-  // Render consecutive same-superset exercises inside a labelled group.
-  let html='<div class="log-list">'; let i=0;
-  while(i<workoutPlan.length){
-    const ss = draft[workoutPlan[i]] && draft[workoutPlan[i]].superset;
-    if(ss){
-      const group=[];
-      while(i<workoutPlan.length && draft[workoutPlan[i]] && draft[workoutPlan[i]].superset===ss){ group.push(workoutPlan[i]); i++; }
-      html+=`<div class="superset-group"><div class="superset-lbl">⇄ Superset ${ss} · alternate sets, short rest</div>`
-        + group.map(cardWrap).join('') + `</div>`;
-    } else { html+=cardWrap(workoutPlan[i]); i++; }
-  }
-  html+='</div>';
-  body.innerHTML=html;
+  body.innerHTML = settings.focusMode ? buildFocusHTML() : buildListHTML();
   calcAll();
-  renderStreakBar();
   updatePlanBanner();
+}
+
+// One superset group or a single exercise, wrapped with its section colour.
+function cardWrap(ex){
+  const sec = sections.find(s=>(exercises[s]||[]).includes(ex)) || '';
+  const secCls = (SEC_CLS[sec]||'custom')+'-section';
+  return `<div class="${secCls}">${buildCard(sec, ex)}</div>`;
+}
+// Group the plan into units: a superset (consecutive shared label) or a lone lift.
+function workoutUnits(){
+  const plan=workoutPlan||[], units=[]; let i=0;
+  while(i<plan.length){
+    const ss = draft[plan[i]] && draft[plan[i]].superset;
+    if(ss){ const g=[]; while(i<plan.length && draft[plan[i]] && draft[plan[i]].superset===ss){ g.push(plan[i]); i++; } units.push(g); }
+    else { units.push([plan[i]]); i++; }
+  }
+  return units;
+}
+function exerciseComplete(ex){
+  const d=getDraft(ex);
+  const filled=d.sets.filter(s=>!s.warm&&(parseFloat(s.r)>0||parseFloat(s.w)>0));
+  return filled.length>0 && filled.every(s=>s.done);
+}
+function unitLabel(u){ const ss=draft[u[0]]&&draft[u[0]].superset; return ss?`Superset ${ss}`:u[0]; }
+
+// ── Full-list view (every exercise, superset groups) with a Focus toggle ──
+function buildListHTML(){
+  let html=`<div class="focus-listbar"><button class="focus-all-btn" onclick="setFocusMode(true)">⊡ Focus mode</button></div><div class="log-list">`;
+  workoutUnits().forEach(u=>{
+    if(u.length>1){
+      const ss=draft[u[0]].superset;
+      html+=`<div class="superset-group"><div class="superset-lbl">⇄ Superset ${ss} · alternate sets, short rest</div>`+u.map(cardWrap).join('')+`</div>`;
+    } else html+=cardWrap(u[0]);
+  });
+  return html+'</div>';
+}
+
+// ── Hybrid focus view: one unit in focus + an "up next" rail ──
+function buildFocusHTML(){
+  const units=workoutUnits();
+  focusIndex=Math.max(0, Math.min(focusIndex, units.length-1));
+  const unit=units[focusIndex]||[];
+  const dayName = workoutProgram ? workoutProgram.dayName : 'Workout';
+  let html=`<div class="focus-hdr">
+    <div class="focus-hdr-row">
+      <div class="focus-title">${dayName}<span class="focus-count">${focusIndex+1} / ${units.length}</span></div>
+      <button class="focus-all-btn" onclick="setFocusMode(false)">☰ All</button>
+    </div>
+    <div class="focus-nav">
+      <button class="focus-nav-btn" onclick="focusPrev()" ${focusIndex===0?'disabled':''}>‹ Prev</button>
+      <button class="focus-nav-btn next" onclick="focusNext()">${focusIndex>=units.length-1?'✓ Last exercise':'Next ›'}</button>
+    </div>
+  </div>`;
+  const inner=unit.map(cardWrap).join('');
+  if(unit.length>1){
+    const ss=draft[unit[0]].superset;
+    html+=`<div class="log-list"><div class="superset-group"><div class="superset-lbl">⇄ Superset ${ss} · alternate sets, short rest</div>${inner}</div></div>`;
+  } else html+=`<div class="log-list">${inner}</div>`;
+  html+=`<div class="focus-spacer"></div>`;
+  // up-next rail: one chip per exercise, tap to jump to its unit
+  let chips='';
+  units.forEach((u,ui)=>u.forEach(ex=>{
+    const done=exerciseComplete(ex), cur=ui===focusIndex;
+    const d=getDraft(ex);
+    const sub=(d.superset?`⇄${d.superset} · `:'')+(d.scheme?schemeLabel(d.scheme):(d.sets.length+' sets'));
+    chips+=`<div class="rail-chip ${cur?'cur':done?'done':''}" onclick="focusGo(${ui})">
+      <div class="rail-chip-name">${done?'✓ ':''}${ex}</div>
+      <div class="rail-chip-sub">${sub}</div></div>`;
+  }));
+  html+=`<div class="focus-rail">${chips}</div>`;
+  return html;
+}
+function setFocusMode(on){ settings.focusMode=on; saveAll(); buildLog(); }
+function focusGo(i){ focusIndex=i; buildLog();
+  document.getElementById('page-log').scrollTo({top:0,behavior:'smooth'}); }
+function focusPrev(){ if(focusIndex>0){ focusIndex--; buildLog(); document.getElementById('page-log').scrollTo({top:0,behavior:'smooth'}); } }
+function focusNext(){
+  const n=workoutUnits().length;
+  if(focusIndex<n-1){ focusIndex++; buildLog(); document.getElementById('page-log').scrollTo({top:0,behavior:'smooth'}); }
+  else showToast('Last exercise — hit LOG WORKOUT when done');
 }
 
 // ── Start Workout screen ──────────────────────────────────────
@@ -2336,6 +2443,7 @@ function startProgramDay(){
   workoutPlan=day.exercises.map(de=>de.ex);
   workoutProgram={programId:p.id,weekIndex:wi,dayIndex:di,dayName:dayLabel(p,programState)};
   builderSelected=new Set(workoutPlan);
+  focusIndex=0;
   saveDraft(); saveAll();
   buildLog();
   if(needSetup) showToast('Tip: set your '+(p.tmBased?'training maxes':'starting weights')+' via 📚 for auto-prescribed loads');
@@ -2730,6 +2838,7 @@ function applyPlan() {
   if(!builderSelected || builderSelected.size === 0){ showToast('Select at least one exercise'); return; }
   workoutPlan = [...builderSelected];
   activeSection = '';
+  focusIndex = 0;
   buildLog();
 }
 
@@ -2759,6 +2868,20 @@ function checkCardDone(ex) {
   if (allDone && filled.length > 0) {
     card.classList.add('collapsed');
     updateCardSummary(ex);
+    // In focus mode, once every lift in the current unit is done, slide to the next.
+    if (settings.focusMode && workoutPlan) {
+      const units = workoutUnits(), unit = units[focusIndex] || [];
+      if (unit.includes(ex) && unit.every(exerciseComplete) && focusIndex < units.length - 1) {
+        setTimeout(() => {
+          if (workoutPlan && settings.focusMode) {
+            focusIndex++; buildLog();
+            const next = (workoutUnits()[focusIndex] || [])[0];
+            if (next) showToast('Next: ' + next);
+            document.getElementById('page-log').scrollTo({top:0});
+          }
+        }, 750);
+      }
+    }
   }
 }
 

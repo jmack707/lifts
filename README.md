@@ -10,6 +10,7 @@ A simple, private workout tracker that runs entirely in your browser. No account
 
 - **Programs** — follow a structured routine (StrongLifts 5×5, GZCLP, 5/3/1, and a 16-week RPE-based athlete program built in) that rotates through workout days and tells you exactly what to lift next
 - **Supersets, RPE targets, rep ranges & timed holds** — antagonist pairs are grouped with short rest, sets can prescribe a rep range and an RPE/reps-in-reserve target, and planks/holds are logged in seconds
+- **Focus mode** — during a workout, one exercise (or superset pair) fills the screen with a progress header and an "up next" rail; it auto-advances as you finish. Toggle to the full list anytime (☰)
 - **Prescribed sets** — the app pre-fills each set's target weight and reps from your working weight (or a percentage of your training max for 5/3/1); AMRAP sets are flagged
 - **Automatic progression** — hit all your sets and the weight goes up next session; miss it a few times and it deloads. 5/3/1 runs its 4-week wave off a training max that rises each cycle — all handled for you
 - **Plan your own workout** — or pick exercises freely, in the order you want them
