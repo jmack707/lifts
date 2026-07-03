@@ -1798,15 +1798,8 @@ function startFromTemplate(id){
   const t = templates.find(t=>t.id===id);
   if(!t) return;
   builderSelected = new Set(t.exercises);
-  // pre-fill from last session for each
-  t.exercises.forEach(ex=>{
-    const last = sessions.find(s=>(s.exercises||[]).find(e=>e.ex===ex));
-    if(last){ const le=last.exercises.find(e=>e.ex===ex);
-      if(le){ const d=getDraft(ex);
-        const lastSets=(le.sets||[]).filter(s=>s.r>0||s.w>0);
-        while(d.sets.length<lastSets.length) d.sets.push({w:'',r:'',done:false});
-        lastSets.forEach((s,i)=>{ d.sets[i].w=s.w>0?s.w.toString():''; d.sets[i].r=s.r>0?s.r.toString():''; }); }}
-  });
+  // Start blank — clear any stale entries. Tap ↺ on a card to pull last time's numbers.
+  t.exercises.forEach(ex=>{ delete draft[ex]; });
   saveDraft();
   applyPlan();
 }
