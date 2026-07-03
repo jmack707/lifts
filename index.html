@@ -223,6 +223,10 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);
 .set-hold-lbl{background:var(--s2);border:1px solid transparent;border-radius:8px;
   color:var(--muted);font-family:'DM Mono',monospace;font-size:13px;
   padding:9px 6px;text-align:center;}
+.hold-btn{width:100%;background:var(--s2);border:1px solid var(--border);border-radius:8px;
+  color:var(--gold);font-family:'DM Mono',monospace;font-size:13px;font-weight:700;
+  padding:9px 6px;text-align:center;cursor:pointer;}
+.hold-btn:active{background:var(--s3);}
 
 /* ── Superset group + badge ── */
 .superset-group{border:1px solid rgba(74,158,224,.3);border-radius:14px;
@@ -890,7 +894,7 @@ margin-bottom:10px;padding:14px;
     </svg>
     <div class="rest-num">
       <div class="rest-countdown" id="rest-num">90</div>
-      <div class="rest-next">REST</div>
+      <div class="rest-next" id="rest-next">REST</div>
     </div>
   </div>
   <div class="rest-actions">
@@ -1437,6 +1441,8 @@ function startRest(ex, setInfo, dur) {
   rt.ex    = ex;
   rt.setInfo = setInfo;
   rt.active  = true;
+  rt.mode = 'rest';
+  document.getElementById('rest-next').textContent = 'REST';
   document.getElementById('rest-ex-name').textContent  = ex.toUpperCase();
   document.getElementById('rest-set-info').textContent = setInfo;
   updateRestUI();
@@ -1463,7 +1469,34 @@ function endRest() {
   clearInterval(rt.interval); rt.active = false;
   document.getElementById('rest-overlay').classList.remove('active');
   playBeep(); vibrate();
+  if(rt.mode==='hold'){
+    const ex=rt.holdEx, i=rt.holdIdx; rt.mode=null;
+    const d=getDraft(ex), s=d&&d.sets[i];
+    if(s){
+      if(!(parseFloat(s.r)>0)) s.r=String(rt.total);   // log the held seconds
+      s.done=true; saveDraft();
+      if(activeTab==='log') buildLog();                // reflect reps + checkmark
+      showToast('⏱️ Hold complete!');
+      postSetRest(ex, i);                              // then rest / next in superset
+    }
+    return;
+  }
   showToast('Rest complete — go! 💪');
+}
+// Countdown timer for a timed hold (plank, side plank, dead hang, …).
+function startHold(ex, i){
+  const d=getDraft(ex), s=d.sets[i];
+  if(!s) return;
+  const secs = parseInt(s.r) || s.hold || 30;
+  if(rt.interval) clearInterval(rt.interval);
+  rt.total=secs; rt.rem=secs; rt.mode='hold'; rt.holdEx=ex; rt.holdIdx=i; rt.active=true;
+  document.getElementById('rest-ex-name').textContent = ex.toUpperCase();
+  document.getElementById('rest-set-info').textContent = `Hold — set ${i+1}`;
+  document.getElementById('rest-next').textContent = 'HOLD';
+  updateRestUI();
+  document.getElementById('rest-overlay').classList.add('active');
+  rt.interval=setInterval(tickRest,1000);
+  updateDurBtns();
 }
 function stopRest() {
   clearInterval(rt.interval); rt.active=false;
@@ -1886,7 +1919,7 @@ function setParts(ex, i){
          style="flex-direction:column;gap:0"><span style="font-size:8px;font-weight:700;color:var(--gold);line-height:1">W</span>${s.done?'✓':'○'}</div>`
     : `<div class="set-check ${s.done?'done':''}" id="chk-${ke}-${i}" onclick="toggleDone('${ex}',${i})">${s.done ? '✓' : '○'}</div>`;
   const wCell = s.hold
-    ? `<div class="set-hold-lbl">hold</div>`
+    ? `<button class="hold-btn" onclick="startHold('${ex}',${i})" title="Start hold timer">▶ ${parseInt(s.r)||s.hold||30}s</button>`
     : `<input type="number" inputmode="decimal" placeholder="${s.warm?'warm':s.noload?'opt':(bw?settings.bw+' bw':U())}"
         class="set-input" value="${s.w}" data-ex="${ex}" data-set="${i}" data-t="w" oninput="onInput(this)">`;
   const rInput = `<input type="number" inputmode="numeric" placeholder="${s.hold?'secs':s.amrap?'AMRAP':'reps'}"
@@ -2085,17 +2118,33 @@ function toggleDone(ex, i) {
   if(chk){ chk.classList.toggle('done', d.sets[i].done); chk.textContent=d.sets[i].done?'✓':'○'; }
   checkCardDone(ex);
   updateCardSummary(ex);
-  if(d.sets[i].done) {
-    const st=d.sets[i];
-    const w=parseFloat(st.w)||0, r=parseFloat(st.r)||0;
-    let info;
-    if(st.hold) info = `Set ${i+1}: ${r||st.hold}s hold`;
-    else info = w>0 ? `Set ${i+1}: ${w} ${U()} × ${r}` : `Set ${i+1}: ${r} reps${st.noload?'':' (BW)'}`;
-    // Supersets alternate with short rest between paired lifts.
-    const dur = d.superset ? 45 : (settings.rest||90);
-    startRest(ex, info, dur);
-  }
+  if(d.sets[i].done) postSetRest(ex, i);
   refreshSSNext();
+}
+
+// What happens after a set is completed: in a superset, alternate to the next
+// paired exercise (no rest) and only start the rest timer once the whole round
+// is done; otherwise start the rest timer right away.
+function postSetRest(ex, i){
+  const d=getDraft(ex); const st=d.sets[i];
+  if(!st || !st.done) return;
+  const w=parseFloat(st.w)||0, r=parseFloat(st.r)||0;
+  let info;
+  if(st.hold) info = `Set ${i+1}: ${r||st.hold}s hold`;
+  else info = w>0 ? `Set ${i+1}: ${w} ${U()} × ${r}` : `Set ${i+1}: ${r} reps${st.noload?'':' (BW)'}`;
+  if(d.superset){
+    const mates = ssMembers(d.superset);
+    // Round i is done when every paired exercise has its set i checked off (or has no set i).
+    const roundDone = mates.every(m=>{ const ms=getDraft(m).sets[i]; return !ms || ms.done; });
+    if(roundDone){
+      startRest(unitLabel(mates), `Round ${i+1} done — rest`, settings.rest||90);
+    } else {
+      const next = mates.find(m=>{ const ms=getDraft(m).sets[i]; return ms && !ms.done; });
+      if(next) showToast('⇄ Next: '+next);
+    }
+  } else {
+    startRest(ex, info, settings.rest||90);
+  }
 }
 
 function quickFill(ex) {
