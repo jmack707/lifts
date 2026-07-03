@@ -209,6 +209,15 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);
   padding:1px 4px;border-radius:3px;margin-left:4px;letter-spacing:.04em;}
 .prescribe-note{font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;
   padding:0 12px 6px;}
+.target-row{display:flex;align-items:center;gap:8px;padding:2px 12px 10px;}
+.target-lbl{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);}
+.target-input{width:76px;background:var(--s2);border:1px solid var(--border);border-radius:8px;
+  padding:6px 8px;color:var(--text);font-family:'DM Mono',monospace;font-size:15px;text-align:center;}
+.target-input:focus{border-color:var(--border2);outline:none;}
+.target-unit{font-size:12px;color:var(--muted);margin-left:-3px;}
+.target-plate-btn{margin-left:auto;background:var(--s2);border:1px solid var(--border);border-radius:8px;
+  padding:6px 10px;font-size:15px;cursor:pointer;}
+.target-plate-btn:active{background:var(--s3);}
 .rpe-badge{font-size:8px;font-weight:700;background:var(--purple);color:#fff;
   padding:1px 4px;border-radius:3px;margin-left:4px;letter-spacing:.03em;}
 .set-hold-lbl{background:var(--s2);border:1px solid transparent;border-radius:8px;
@@ -1917,6 +1926,18 @@ function buildCard(sec, ex) {
     }
   }
   const ssBadge = d.superset ? `<span class="ss-badge">⇄ ${d.superset}</span>` : '';
+  // Target weight — the load you're aiming for; feeds the plate calculator (🔢).
+  // Hidden for timed-hold work where a barbell weight has no meaning.
+  const isHold = d.sets.some(s=>s.hold) || (d.scheme && d.scheme.hold);
+  const tgtVal = d.target!=null && d.target!=='' ? d.target : (targetWeightFor(ex)||'');
+  const targetRow = isHold ? '' : `<div class="target-row">
+      <span class="target-lbl">🎯 Target</span>
+      <input type="number" inputmode="decimal" class="target-input" id="tgt-${ke}"
+        placeholder="—" value="${tgtVal}" onclick="event.stopPropagation()"
+        oninput="onTargetInput('${ex}',this)">
+      <span class="target-unit">${U()}</span>
+      <button class="target-plate-btn" onclick="event.stopPropagation();platesFor('${ex}')" title="Plate calculator for target">🔢</button>
+    </div>`;
   return `<div class="${cardCls}" id="ec-${ke}">
     <div class="ex-card-hdr" onclick="toggleCollapse('${ex}')">
       <div class="ex-name">${ex}${ssBadge}</div>
@@ -1929,12 +1950,12 @@ function buildCard(sec, ex) {
     </div>
     <div class="ex-card-summary" id="esum-${ke}"></div>
     ${prescribeNote}
+    ${targetRow}
     <div class="set-rows">${rows}</div>
     <div class="set-controls">
       <button class="set-ctrl-btn" onclick="removeSet('${ex}')" ${n<=1?'disabled':''}>− Set</button>
       <button class="set-ctrl-btn" onclick="addSet('${ex}')">+ Set</button>
       <button class="warm-btn" onclick="addWarmups('${ex}')" title="Add warm-up sets">🔥</button>
-      <button class="warm-btn" onclick="platesFor('${ex}')" title="Plate calculator for this weight">🔢</button>
       <button class="complete-btn" onclick="completeExercise('${ex}')">✓ Complete</button>
     </div>
     <div class="ex-notes-wrap ${hasNotes?'open':''}" id="nwrap-${ke}">
@@ -1991,8 +2012,9 @@ function completeExercise(ex){
 // toward volume, 1RM, PRs, or progression.
 function addWarmups(ex){
   const d = getDraft(ex);
-  const work = Math.max(0, ...d.sets.filter(s=>!s.warm).map(s=>parseFloat(s.w)||0));
-  if(!(work>0)){ showToast('Enter your working weight first'); return; }
+  // Ramp toward your entered working set, or the Target weight if you haven't typed one yet.
+  const work = Math.max(0, ...d.sets.filter(s=>!s.warm).map(s=>parseFloat(s.w)||0)) || targetWeightFor(ex);
+  if(!(work>0)){ showToast('Enter a working or target weight first'); return; }
   const bar = settings.bar||UNIT_DEFAULTS[U()].bar;
   const working = d.sets.filter(s=>!s.warm);   // keep the real sets
   const warm = [];
@@ -2596,11 +2618,29 @@ function showPlateCalc(prefill){
   openModal('plate');
   if(prefill>0) calcPlates();
 }
-// Open the plate calculator prefilled with an exercise's heaviest working weight.
-function platesFor(ex){
+// The exercise's target weight for the plate calculator: the number you type in
+// the card's Target field, else the prescribed working weight, else the heaviest
+// set you've entered so far.
+function targetWeightFor(ex){
   const d=getDraft(ex);
-  const w=Math.max(0, ...d.sets.filter(s=>!s.warm&&!s.hold&&!s.noload).map(s=>parseFloat(s.w)||0));
+  const t=parseFloat(d.target);
+  if(t>0) return t;
+  const m=exMeta[ex];
+  if(m && m.weight>0) return m.weight;
+  const tw=Math.max(0, ...d.sets.map(s=>parseFloat(s.tw)||0));
+  if(tw>0) return tw;
+  return Math.max(0, ...d.sets.filter(s=>!s.warm&&!s.hold&&!s.noload).map(s=>parseFloat(s.w)||0));
+}
+// Open the plate calculator prefilled with this exercise's target weight.
+function platesFor(ex){
+  const w=targetWeightFor(ex);
   showPlateCalc(w>0?w:null);
+}
+// Card Target field — remember what the user typed so the plate calc & warmups use it.
+function onTargetInput(ex, el){
+  const d=getDraft(ex);
+  d.target=el.value;
+  saveDraft();
 }
 function calcPlates(){
   const target=parseFloat(document.getElementById('plate-target').value)||0;
