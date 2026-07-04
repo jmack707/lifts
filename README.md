@@ -12,6 +12,7 @@ A simple, private workout tracker that runs entirely in your browser. No account
 - **Supersets, RPE targets, rep ranges & timed holds** — antagonist pairs are grouped with short rest, sets can prescribe a rep range and an RPE/reps-in-reserve target, and planks/holds are logged in seconds
 - **Home dashboard** — open to your stats (streak, weekly count, total sessions), a "next workout" hero that starts your program in one tap, quick actions, and recent activity
 - **Per-exercise history** — every logged session for an exercise (sets, est. 1RM, PRs, notes) alongside its progress charts; open it from the 📈 button in the Exercises tab
+- **Exercise library** — browse/search 800+ exercises (filter by body region), each with target & secondary muscles, equipment, step-by-step how-to, and demo images; add any to your list in a tap (data from free-exercise-db — see attribution below)
 - **Save from anywhere** — while a workout is in progress, a bar on every other tab lets you jump back (Resume) or log it (Save) without hunting for the button; the Home tab itself shows as "Workout" mid-session
 - **Focus mode** — during a workout, one exercise (or superset pair) fills the screen with a progress header and an "up next" rail; it auto-advances as you finish. Toggle to the full list anytime (☰)
 - **Prescribed sets** — the app pre-fills each set's target weight and reps from your working weight (or a percentage of your training max for 5/3/1); AMRAP sets are flagged
@@ -23,7 +24,7 @@ A simple, private workout tracker that runs entirely in your browser. No account
 - **Bodyweight exercises** — leave weight blank; the app tracks reps (and uses your bodyweight for volume if set)
 - **Rest timer** — auto-starts when you check off a set, with a countdown ring, beep, and vibration
 - **Personal records** — automatic PR detection with a confetti celebration 🎉
-- **History** — every past session, grouped by month
+- **History** — every past session, grouped by month; edit any logged workout (date, weights, reps, sets, exercises, notes) or add a backdated one with the ＋ button — PRs recalculate automatically
 - **Progress charts** — estimated 1RM, session volume, and weekly volume over time per exercise
 - **Templates** — save and reload your regular workouts
 - **Plate calculator** — shows which plates to load for any target weight, from your own plate inventory
@@ -76,11 +77,26 @@ All workout data is stored locally in your browser (`localStorage`). It never le
 ├── index.html            The entire app (HTML + CSS + JS in one file)
 ├── manifest.json         PWA manifest (name, icons, colors)
 ├── sw.js                 Service worker for offline caching
+├── data/
+│   ├── exercises.json    Exercise library metadata (name, muscles, equipment)
+│   └── how-to.json       English step-by-step instructions, keyed by name
 ├── icon-192.png          App icon (192×192)
 ├── icon-512.png          App icon (512×512)
 ├── apple-touch-icon.png  iOS home-screen icon (180×180)
 └── README.md             This file
 ```
+
+The two `data/*.json` files back the **Exercise Library** (Exercises tab → *Browse exercise library*). They are lazy-loaded on first use and cached by the service worker, so the library (metadata + instructions) works offline afterward. Exercise **demo images** are loaded on demand from the dataset's CDN when you open an exercise's info sheet, so they appear when online and are simply omitted offline.
+
+## Exercise data & attribution
+
+The exercise library (names, primary/secondary muscles, equipment, step-by-step
+instructions, and demo images) comes from
+**[free-exercise-db](https://github.com/yuhonas/free-exercise-db)** by yuhonas,
+which is released into the **public domain (Unlicense)** and originates from
+the Everkinetic dataset. Metadata and instructions are bundled in `data/`;
+images are referenced from the dataset's raw GitHub URLs and are not
+redistributed here.
 
 ## Tech
 

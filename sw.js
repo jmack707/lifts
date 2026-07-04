@@ -1,5 +1,5 @@
 // Lifts service worker — caches the app shell so it works fully offline.
-const CACHE = 'lifts-v9';
+const CACHE = 'lifts-v31';
 const ASSETS = [
   './',
   './index.html',
@@ -32,6 +32,16 @@ self.addEventListener('fetch', e => {
       }).catch(() => caches.match('./index.html'))
     );
   } else {
-    e.respondWith(caches.match(e.request).then(r => r || fetch(e.request)));
+    // Cache-first, then network — and cache successful GETs so the exercise
+    // library data files (data/*.json) work offline after their first load.
+    e.respondWith(
+      caches.match(e.request).then(r => r || fetch(e.request).then(res => {
+        if (res && res.ok && e.request.method === 'GET') {
+          const copy = res.clone();
+          caches.open(CACHE).then(c => c.put(e.request, copy));
+        }
+        return res;
+      }).catch(() => r))
+    );
   }
 });
