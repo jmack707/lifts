@@ -827,6 +827,18 @@ margin-bottom:10px;padding:14px;
 .tmpl-chip-x{color:var(--muted2);font-size:14px;font-weight:400;padding:0 2px;}
 .tmpl-chip-x:active{color:var(--core);}
 .tmpl-save-row{display:flex;gap:7px;align-items:center;margin:6px 0 4px;}
+.tmpl-io-row{display:flex;align-items:center;justify-content:space-between;margin:2px 0 8px;}
+.tmpl-io-lbl{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);}
+.tmpl-io-acts{display:flex;gap:6px;}
+.tmpl-io-btn{background:var(--s2);border:1px solid var(--border2);color:var(--purple);
+  border-radius:7px;padding:5px 10px;font-size:12px;font-weight:700;cursor:pointer;}
+.tmpl-io-btn:active{background:var(--s3);}
+.prog-io-hdr{display:flex;align-items:center;justify-content:space-between;
+  font-size:12px;color:var(--muted);}
+.prog-card-acts{display:flex;align-items:center;gap:6px;}
+.prog-io-btn{background:var(--s2);border:1px solid var(--border2);color:var(--muted);
+  border-radius:7px;padding:6px 9px;font-size:14px;cursor:pointer;}
+.prog-io-btn:active{background:var(--s3);color:var(--core);}
 .start-quick{display:flex;gap:8px;margin-top:14px;}
 .start-quick-btn{flex:1;padding:11px;background:var(--s2);border:1px solid var(--border);
   border-radius:9px;color:var(--muted);font-size:13px;font-weight:700;cursor:pointer;}
@@ -1275,7 +1287,7 @@ margin-bottom:10px;padding:14px;
       <div class="help-item">
         <div class="help-icon">📋</div>
         <div class="help-text"><div class="help-label">Templates (saved workouts)</div>
-          <div class="help-desc">Do the same workout a lot? On the start screen, tap the exercises you want, then tap "Save / manage templates," type a name like "Leg Day," and hit Save. Next time, your saved workout shows up as a button at the top of the start screen — tap it and everything's ready.</div></div>
+          <div class="help-desc">Do the same workout a lot? On the Home screen tap <b>Build / Templates</b>, pick the exercises you want, then tap <b>💾 Save</b> and give it a name like "Leg Day." Next time it shows up as a chip at the top — tap it and everything's ready. Tap the <b>✕</b> on a chip to delete it.</div></div>
       </div>
       <div class="help-item">
         <div class="help-icon">🔢</div>
@@ -1309,15 +1321,37 @@ margin-bottom:10px;padding:14px;
       <div class="help-item">
         <div class="help-icon">💾</div>
         <div class="help-text"><div class="help-label">Save a copy (Backup)</div>
-          <div class="help-desc">Go to the Exercises tab and tap <b>Backup to Drive</b>. This makes a little file. Put that file somewhere safe like Google Drive. Do this every week or so.</div></div>
+          <div class="help-desc">Go to the <b>Settings</b> tab and tap <b>Backup to Drive</b>. This makes a little file with <em>everything</em> — your history, exercises, templates and programs. Put it somewhere safe like Google Drive. Do this every week or so.</div></div>
       </div>
       <div class="help-item">
         <div class="help-icon">📲</div>
         <div class="help-text"><div class="help-label">Get your stuff back (Restore)</div>
-          <div class="help-desc">Got a new phone, or something went wrong? Tap <b>Restore from Drive</b> and pick that saved file. Everything comes back.</div></div>
+          <div class="help-desc">Got a new phone, or something went wrong? In <b>Settings</b> tap <b>Restore from Drive</b> and pick that saved <b>.json</b> backup file. Everything comes back.</div></div>
       </div>
       <div class="help-tip">
         <div class="help-tip-text">💡 Easy habit: finish your workout → tap Log Workout → tap Backup. Done. Your hard work is safe.</div>
+      </div>
+    </div>
+
+    <div class="help-section">
+      <div class="help-section-title">Sharing & Moving Files</div>
+      <div class="help-item">
+        <div class="help-icon">🔁</div>
+        <div class="help-text"><div class="help-label">The golden rule</div>
+          <div class="help-desc">You never have to build these files by hand. <b>The file you get from Export is exactly the file Import wants.</b> Export on one phone (or from a friend), then Import on another — that's it. All the import files are plain <b>.json</b> files.</div></div>
+      </div>
+      <div class="help-item">
+        <div class="help-icon">📋</div>
+        <div class="help-text"><div class="help-label">Templates (⤓ Export / ⤒ Import)</div>
+          <div class="help-desc">On the <b>Build / Templates</b> screen, tap <b>⤓ Export</b> to save all your templates as a file, or <b>⤒ Import</b> to add templates from a file someone shares. Any exercises they use get added for you automatically.</div></div>
+      </div>
+      <div class="help-item">
+        <div class="help-icon">📚</div>
+        <div class="help-text"><div class="help-label">Programs (⤓ Export / ⤒ Import)</div>
+          <div class="help-desc">Open <b>Programs</b> (📚). Each program has a <b>⤓</b> to export it as a file — even the built‑in ones, so you can share a routine. Tap <b>⤒ Import</b> to add a routine from a file; it shows up as a <em>custom</em> program with a 🗑 button to delete it later. Built‑in programs can't be deleted.</div></div>
+      </div>
+      <div class="help-tip">
+        <div class="help-tip-text">💡 If an import says "nothing found," you probably picked the wrong file — use one made by that same Export button (or a full Backup for Restore).</div>
       </div>
     </div>
 
@@ -1336,6 +1370,8 @@ margin-bottom:10px;padding:14px;
 </div>
 
 <input type="file" id="restore-input" accept=".json" style="display:none" onchange="onRestoreFile(this)">
+<input type="file" id="import-tmpl-input" accept=".json" style="display:none" onchange="onImportTemplates(this)">
+<input type="file" id="import-prog-input" accept=".json" style="display:none" onchange="onImportPrograms(this)">
 
 <script>
 // ── Defaults ──────────────────────────────────────────────────────────────────
@@ -1892,8 +1928,15 @@ function renderBuilder(){
   }
 
   // Saved templates as tap-to-load chips, each with a ✕ to delete.
+  // Header carries Export / Import so templates can be shared as files.
+  html += `<div class="tmpl-io-row">
+    <span class="tmpl-io-lbl">⚡ Templates${templates.length?' · tap to load':''}</span>
+    <span class="tmpl-io-acts">
+      ${templates.length?`<button class="tmpl-io-btn" onclick="exportTemplates()">⤓ Export</button>`:''}
+      <button class="tmpl-io-btn" onclick="document.getElementById('import-tmpl-input').click()">⤒ Import</button>
+    </span>
+  </div>`;
   if(templates.length){
-    html += '<div class="start-sec-lbl">⚡ Your templates · tap to load</div>';
     html += '<div class="tmpl-chips">';
     templates.forEach(t=>{
       html += `<div class="tmpl-chip"><span onclick="startFromTemplate('${t.id}')">📋 ${t.name}</span>`
@@ -3086,6 +3129,74 @@ function deleteTemplate(id){
   if(activeTab==='log' && builderOpen && !workoutPlan) renderBuilder();
 }
 
+// ── Import / Export: templates & programs ──────────────────────
+function downloadJSON(obj, base){
+  const a=document.createElement('a');
+  a.href='data:application/json;charset=utf-8,'+encodeURIComponent(JSON.stringify(obj,null,2));
+  a.download=base+'-'+new Date().toISOString().slice(0,10)+'.json';
+  a.click();
+}
+function readJSONFile(input, cb){
+  const f=input.files[0]; if(!f){ return; }
+  const r=new FileReader();
+  r.onload=e=>{ try{ cb(JSON.parse(e.target.result)); }catch(err){ showToast('Could not read file'); } input.value=''; };
+  r.readAsText(f);
+}
+function uid(pfx){ return pfx+Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+
+function exportTemplates(){
+  if(!templates.length){ showToast('No templates to export'); return; }
+  downloadJSON({type:'lifts-templates', version:1, templates}, 'lifts-templates');
+  showToast('Exported '+templates.length+' template'+(templates.length>1?'s':''));
+}
+function onImportTemplates(input){
+  readJSONFile(input, data=>{
+    const incoming = Array.isArray(data) ? data : (data.templates || (data.name&&data.exercises?[data]:[]));
+    const valid = (incoming||[]).filter(t=>t && t.name && Array.isArray(t.exercises));
+    if(!valid.length){ showToast('No templates in that file'); return; }
+    valid.forEach(t=>{
+      t.exercises.forEach(ex=>ensureExercise(ex, FLAT_SECTION));   // make them selectable
+      templates.push({id:uid('t'), name:t.name, exercises:[...t.exercises]});
+    });
+    saveAll();
+    if(builderOpen) renderBuilder();
+    showToast('Imported '+valid.length+' template'+(valid.length>1?'s':''));
+  });
+}
+
+function exportProgram(id){
+  const p=(programs||[]).find(x=>x.id===id); if(!p){ showToast('Program not found'); return; }
+  const {builtin, ...clean}=p;   // strip the builtin flag so it re-imports as custom
+  downloadJSON({type:'lifts-program', version:1, program:clean},
+    'lifts-program-'+p.name.replace(/[^a-z0-9]+/gi,'-').toLowerCase().replace(/^-|-$/g,''));
+  showToast('Exported '+p.name);
+}
+function onImportPrograms(input){
+  readJSONFile(input, data=>{
+    let incoming = data.program ? [data.program]
+      : Array.isArray(data.programs) ? data.programs
+      : Array.isArray(data) ? data
+      : (data.weeks||data.days) ? [data] : [];
+    incoming = incoming.filter(p=>p && p.name && (Array.isArray(p.weeks)||Array.isArray(p.days)));
+    if(!incoming.length){ showToast('No program in that file'); return; }
+    const userProgs=(programs||[]).filter(p=>!p.builtin);
+    incoming.forEach(p=>{ const {builtin, id, ...rest}=p; userProgs.push({...rest, id:uid('usr-'), builtin:false}); });
+    programs=[...builtinPrograms(), ...userProgs];
+    saveAll(); renderProgramsModal();
+    showToast('Imported '+incoming.length+' program'+(incoming.length>1?'s':''));
+  });
+}
+function deleteProgram(id){
+  const p=(programs||[]).find(x=>x.id===id);
+  if(!p){ return; }
+  if(p.builtin){ showToast('Built-in programs can’t be deleted'); return; }
+  if(!confirm('Delete program “'+p.name+'”? This cannot be undone.')) return;
+  if(programState && programState.programId===id) programState=null;   // stop it if active
+  programs=[...builtinPrograms(), ...(programs||[]).filter(x=>!x.builtin && x.id!==id)];
+  saveAll(); renderProgramsModal();
+  showToast('Deleted '+p.name);
+}
+
 // ════════════════════════════════════════════════════════════════
 // PROGRAMS  (structured weeks/days · prescribed sets · progression)
 // ════════════════════════════════════════════════════════════════
@@ -3222,7 +3333,10 @@ function renderProgramsModal(){
         </div>`).join('')}</div>`;
     }
   }
-  html+=`<div class="prog-day-preview" style="padding:${active?'16px':'0'} 0 8px">${active?'Switch to another program:':'Pick a program to follow:'}</div>`;
+  html+=`<div class="prog-io-hdr" style="padding:${active?'16px':'0'} 0 8px">
+    <span>${active?'Switch to another program:':'Pick a program to follow:'}</span>
+    <button class="tmpl-io-btn" onclick="document.getElementById('import-prog-input').click()">⤒ Import</button>
+  </div>`;
   html+='<div class="prog-list">';
   (programs||[]).forEach(p=>{
     if(active && p.id===active.id) return;
@@ -3234,7 +3348,11 @@ function renderProgramsModal(){
         <div class="prog-name-lbl">${p.name}${p.builtin?'':' <span style="color:var(--muted)">· custom</span>'}</div>
         <div class="prog-day-preview">${desc}</div>
       </div>
-      <button class="prog-act-btn" onclick="activateProgram('${p.id}')">Use</button>
+      <div class="prog-card-acts">
+        <button class="prog-io-btn" onclick="exportProgram('${p.id}')" title="Export program">⤓</button>
+        ${p.builtin?'':`<button class="prog-io-btn" onclick="deleteProgram('${p.id}')" title="Delete program">🗑</button>`}
+        <button class="prog-act-btn" onclick="activateProgram('${p.id}')">Use</button>
+      </div>
     </div>`;
   });
   html+='</div>';
