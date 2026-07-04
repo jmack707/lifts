@@ -661,6 +661,21 @@ margin-bottom:10px;padding:14px;
 
 /* ── Progress ── */
 .prog-body{padding:10px 0;}
+.prog-view-seg{padding:6px 14px 4px;}
+.prog-view-seg .seg-opt{flex:1;text-align:center;}
+.mv-period-seg{padding:8px 14px 12px;}
+.mv-period-seg .seg-opt{flex:1;text-align:center;}
+.mv-bars{padding:0 14px;display:flex;flex-direction:column;gap:11px;}
+.mv-row{display:grid;grid-template-columns:82px 1fr 44px;align-items:center;gap:9px;}
+.mv-lbl{font-size:12px;font-weight:700;color:var(--text);}
+.mv-track{height:16px;background:var(--s2);border-radius:8px;overflow:hidden;}
+.mv-fill{height:100%;border-radius:8px;min-width:3px;transition:width .3s;}
+.mv-val{font-family:'DM Mono',monospace;font-size:14px;font-weight:700;text-align:right;color:var(--text);}
+.mv-per{font-size:9px;color:var(--muted);font-weight:400;}
+.mv-hint{margin:16px 14px 4px;padding:10px 12px;background:var(--s2);border-radius:10px;
+  font-size:12px;color:var(--muted);}
+.mv-note{margin:8px 14px 4px;font-size:11px;color:var(--muted2);line-height:1.5;}
+.mv-empty{margin:24px 14px;text-align:center;color:var(--muted);font-size:13px;line-height:1.6;}
 .prog-sec-lbl{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
   color:var(--muted);padding:12px 14px 5px;}
 .prog-ex-grid{display:flex;flex-wrap:wrap;gap:7px;padding:0 12px 8px;}
@@ -1460,6 +1475,23 @@ let workoutPlan = null;
 let workoutProgram = null;            // {programId,dayIndex,dayName} when the active workout came from a program
 let workoutDate = new Date().toISOString().slice(0,10);
 let activeSection = '', activeTab = 'log', selectedEx = null, progChartMode = '1rm';
+let progView = 'exercise', progPeriod = 'week';   // Progress tab: exercise vs muscle-volume
+// Map the library's specific target muscles to major training groups.
+const MUSCLE_GROUP = {
+  chest:'Chest',
+  lats:'Back', 'middle back':'Back', 'lower back':'Back', traps:'Back',
+  shoulders:'Shoulders', neck:'Shoulders',
+  biceps:'Biceps', triceps:'Triceps', forearms:'Forearms',
+  quadriceps:'Quads', adductors:'Quads',
+  hamstrings:'Hamstrings',
+  glutes:'Glutes', abductors:'Glutes',
+  calves:'Calves',
+  abdominals:'Core'
+};
+const MG_ORDER = ['Chest','Back','Shoulders','Biceps','Triceps','Forearms','Quads','Hamstrings','Glutes','Calves','Core'];
+const MG_COLOR = { Chest:'#e2574a', Back:'#4a9ee0', Shoulders:'#e0a24a', Biceps:'#9b6fe0',
+  Triceps:'#7b5fd0', Forearms:'#8a7fb0', Quads:'#2fb8a0', Hamstrings:'#3a9c86',
+  Glutes:'#e07ab0', Calves:'#6ac04a', Core:'#d9b23a' };
 let focusIndex = 0;   // current unit in the hybrid focus view
 let builderOpen = false;   // dashboard (false) vs. exercise-picker (true) on the home screen
 
@@ -2682,9 +2714,13 @@ function exportCSV(){
 // ════════════════════════════════════════════════════════════════
 function renderProgress(){
   const body=document.getElementById('prog-body');
+  let html=`<div class="seg-ctrl prog-view-seg">
+    <button class="seg-opt ${progView==='exercise'?'on':''}" onclick="setProgView('exercise')">By exercise</button>
+    <button class="seg-opt ${progView==='muscle'?'on':''}" onclick="setProgView('muscle')">By muscle</button>
+  </div>`;
+  if(progView==='muscle'){ html+=renderMuscleVolume(); body.innerHTML=html; return; }
   const allEx=sections.flatMap(s=>exercises[s]||[]);
   if(!selectedEx||!allEx.includes(selectedEx)) selectedEx=allEx[0]||null;
-  let html='';
   sections.forEach(s=>{
     const exList=exercises[s]||[];
     if(!exList.length) return;
@@ -2700,6 +2736,43 @@ function renderProgress(){
 }
 
 function selProgEx(ex){ selectedEx=ex; renderProgress(); }
+function setProgView(v){ progView=v; renderProgress(); }
+function setMusclePeriod(p){ progPeriod=p; renderProgress(); }
+// Muscle-group volume: weekly sets per muscle, from the exercise library's muscle data.
+function renderMuscleVolume(){
+  if(!LIBMUS){ ensureLibMuscle().then(()=>{ if(activeTab==='progress' && progView==='muscle') renderProgress(); }).catch(()=>{}); }
+  const data=muscleSetVolume(progPeriod);
+  const g=data.groups;
+  const present=MG_ORDER.filter(x=>g[x]>0);
+  const max=Math.max(1, ...present.map(x=>g[x]));
+  let html=`<div class="seg-ctrl mv-period-seg">
+    <button class="seg-opt ${progPeriod==='week'?'on':''}" onclick="setMusclePeriod('week')">This week</button>
+    <button class="seg-opt ${progPeriod==='4wk'?'on':''}" onclick="setMusclePeriod('4wk')">4-wk avg/wk</button>
+  </div>`;
+  if(!LIBMUS){ html+=`<div class="mv-note">Loading muscle data…</div>`; }
+  if(!present.length){
+    html+=`<div class="mv-empty">No matched sets ${progPeriod==='week'?'this week':'in the last 4 weeks'} yet.${
+      data.unmatchedSets?`<br><span style="opacity:.8">${data.unmatchedSets} set${data.unmatchedSets>1?'s':''} logged, but from exercises not matched to a muscle.</span>`:''}</div>`;
+    return html;
+  }
+  html+='<div class="mv-bars">';
+  present.forEach(x=>{
+    const raw=g[x];
+    const val = progPeriod==='4wk' ? raw/4 : raw;
+    const disp = Math.round(val*10)/10;
+    const pct = Math.round((raw/max)*100);
+    html+=`<div class="mv-row">
+      <div class="mv-lbl">${x}</div>
+      <div class="mv-track"><div class="mv-fill" style="width:${pct}%;background:${MG_COLOR[x]||'var(--core)'}"></div></div>
+      <div class="mv-val">${disp}${progPeriod==='4wk'?'<span class="mv-per">/wk</span>':''}</div>
+    </div>`;
+  });
+  html+='</div>';
+  html+=`<div class="mv-hint">💡 A common hypertrophy target is ~10–20 hard sets per muscle per week.</div>`;
+  html+=`<div class="mv-note">Each working set counts toward its target muscle; secondary muscles count as ½.${
+    data.unmatchedSets?` <b>${data.unmatchedSets} set${data.unmatchedSets>1?'s':''}</b> from ${data.unmatchedCount} exercise${data.unmatchedCount>1?'s':''} couldn't be matched — add them from the 🔍 library for accurate tracking.`:''}</div>`;
+  return html;
+}
 // Jump straight to an exercise's chart + full session history.
 function openExerciseHistory(ex){ selectedEx=ex; switchTab('progress'); }
 
@@ -2877,6 +2950,44 @@ async function ensureLibEq(){
   await loadExLib();
   LIBEQ={}; EXLIB.forEach(e=>{ LIBEQ[e.n.toLowerCase()]=e.eq; });
   return LIBEQ;
+}
+// Muscle lookup for the muscle-volume analytics (target + secondary).
+let LIBMUS=null;
+async function ensureLibMuscle(){
+  if(LIBMUS) return LIBMUS;
+  await loadExLib();
+  LIBMUS={}; EXLIB.forEach(e=>{ LIBMUS[e.n.toLowerCase()]={t:e.t, s:e.s||[]}; });
+  return LIBMUS;
+}
+function musclesFor(ex){
+  const info=exInfo[ex];
+  if(info && info.t) return {t:info.t, s:info.s||[]};
+  if(LIBMUS){ const v=LIBMUS[String(ex).toLowerCase()]; if(v) return v; }
+  return null;
+}
+function muscleGroupOf(m){ return MUSCLE_GROUP[String(m||'').toLowerCase()] || null; }
+// Count working sets toward each muscle group over a period.
+// Target muscle = 1 set; each secondary muscle = ½ set.
+function muscleSetVolume(period){
+  const today=new Date().toISOString().slice(0,10);
+  const thisWeek=getWeekKey(today);
+  const cut=new Date(); cut.setDate(cut.getDate()-27);
+  const cutStr=cut.toISOString().slice(0,10);
+  const groups={}; let unmatchedSets=0; const unmatched=new Set();
+  (sessions||[]).forEach(s=>{
+    const inWin = period==='4wk' ? s.date>=cutStr : getWeekKey(s.date)===thisWeek;
+    if(!inWin) return;
+    (s.exercises||[]).forEach(e=>{
+      const n=(e.sets||[]).filter(st=>parseFloat(st.r)>0 || parseFloat(st.w)>0).length;
+      if(!n) return;
+      const m=musclesFor(e.ex);
+      const tg=m && muscleGroupOf(m.t);
+      if(!tg){ unmatchedSets+=n; unmatched.add(e.ex); return; }
+      groups[tg]=(groups[tg]||0)+n;
+      (m.s||[]).forEach(sm=>{ const g=muscleGroupOf(sm); if(g) groups[g]=(groups[g]||0)+n*0.5; });
+    });
+  });
+  return { groups, unmatchedSets, unmatchedCount:unmatched.size };
 }
 function exEquip(ex){
   if(exInfo[ex] && exInfo[ex].eq) return exInfo[ex].eq;

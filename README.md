@@ -26,6 +26,7 @@ A simple, private workout tracker that runs entirely in your browser. No account
 - **Personal records** — automatic PR detection with a confetti celebration 🎉
 - **History** — every past session, grouped by month; edit any logged workout (date, weights, reps, sets, exercises, notes) or add a backdated one with the ＋ button — PRs recalculate automatically
 - **Progress charts** — estimated 1RM, session volume, and weekly volume over time per exercise
+- **Muscle-group volume** — weekly sets per muscle group (target muscles full, secondary at ½) with a this-week / 4-week-average toggle, so you can see if you're training everything enough
 - **Templates** — save and reload your regular workouts; export/import them as JSON files to share or move between devices
 - **Import/export programs** — share a structured routine as a file, import someone else's, and delete custom programs you no longer want
 - **Plate calculator** — shows which plates to load for any target weight, from your own plate inventory
