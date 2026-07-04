@@ -675,6 +675,8 @@ margin-bottom:10px;padding:14px;
 .mv-detail-lbl{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
   color:var(--muted);margin:2px 0 7px;}
 .mv-detail-lbl:not(:first-child){margin-top:13px;}
+.mv-lib-toggle{display:flex;align-items:center;justify-content:space-between;cursor:pointer;}
+.mv-lib-toggle-act{color:var(--purple);}
 .mv-detail-empty{font-size:12px;color:var(--muted2);padding:2px 0 4px;}
 .mv-mine-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;
   border-bottom:1px solid var(--border2);cursor:pointer;}
@@ -1499,7 +1501,7 @@ let workoutProgram = null;            // {programId,dayIndex,dayName} when the a
 let workoutDate = new Date().toISOString().slice(0,10);
 let activeSection = '', activeTab = 'log', selectedEx = null, progChartMode = '1rm';
 let progView = 'exercise', progPeriod = 'week';   // Progress tab: exercise vs muscle-volume
-let mvOpenGroup = null, mvLibList = [];            // expanded muscle group + its library suggestions
+let mvOpenGroup = null, mvLibList = [], mvLibOpen = false;   // expanded group, its library list, and whether that list is shown
 // Map the library's specific target muscles to major training groups.
 const MUSCLE_GROUP = {
   chest:'Chest',
@@ -2762,7 +2764,8 @@ function renderProgress(){
 function selProgEx(ex){ selectedEx=ex; renderProgress(); }
 function setProgView(v){ progView=v; renderProgress(); }
 function setMusclePeriod(p){ progPeriod=p; renderProgress(); }
-function toggleMuscleGroup(g){ mvOpenGroup = mvOpenGroup===g ? null : g; renderProgress(); }
+function toggleMuscleGroup(g){ mvOpenGroup = mvOpenGroup===g ? null : g; mvLibOpen=false; renderProgress(); }
+function toggleMvLib(){ mvLibOpen = !mvLibOpen; renderProgress(); }
 // Jump from a muscle-group contributor to that exercise's chart + history.
 function mvShowExercise(ex){ progView='exercise'; selectedEx=ex; renderProgress();
   const pg=document.getElementById('page-progress'); if(pg) pg.scrollTo({top:0,behavior:'smooth'}); }
@@ -2801,18 +2804,23 @@ function muscleGroupDetail(group){
   } else {
     h+='<div class="mv-detail-empty">No sets yet in this window.</div>';
   }
-  h+=`<div class="mv-detail-lbl">Exercises that train ${group.toLowerCase()} · tap to view or add</div>`;
-  if(!mvLibList.length){
-    h+='<div class="mv-detail-empty">Library not loaded — connect once to download it.</div>';
-  } else {
-    h+='<div class="mv-lib">'+mvLibList.slice(0,14).map((e,i)=>{
-      const have=owned.has(e.n);
-      return `<div class="mv-lib-row">
-        <span class="mv-lib-ex" onclick="event.stopPropagation();showExInfoName('${esc(e.n)}')">${e.n}<span class="mv-lib-eq">${e.eq?' · '+htmlEsc(e.eq):''}</span></span>
-        <button class="mv-lib-add ${have?'have':''}" onclick="event.stopPropagation();mvAddLib(${i},this)">${have?'✓':'＋'}</button>
-      </div>`;
-    }).join('')+'</div>';
-    if(mvLibList.length>14) h+=`<div class="mv-lib-more" onclick="event.stopPropagation();showLibrary()">Browse all ${mvLibList.length} in the library ›</div>`;
+  h+=`<div class="mv-detail-lbl mv-lib-toggle" onclick="event.stopPropagation();toggleMvLib()">
+    <span>Exercises that train ${group.toLowerCase()}${mvLibList.length?` (${mvLibList.length})`:''}</span>
+    <span class="mv-lib-toggle-act">${mvLibOpen?'Hide ▾':'Show ▸'}</span>
+  </div>`;
+  if(mvLibOpen){
+    if(!mvLibList.length){
+      h+='<div class="mv-detail-empty">Library not loaded — connect once to download it.</div>';
+    } else {
+      h+='<div class="mv-lib">'+mvLibList.slice(0,14).map((e,i)=>{
+        const have=owned.has(e.n);
+        return `<div class="mv-lib-row">
+          <span class="mv-lib-ex" onclick="event.stopPropagation();showExInfoName('${esc(e.n)}')">${e.n}<span class="mv-lib-eq">${e.eq?' · '+htmlEsc(e.eq):''}</span></span>
+          <button class="mv-lib-add ${have?'have':''}" onclick="event.stopPropagation();mvAddLib(${i},this)">${have?'✓':'＋'}</button>
+        </div>`;
+      }).join('')+'</div>';
+      if(mvLibList.length>14) h+=`<div class="mv-lib-more" onclick="event.stopPropagation();showLibrary()">Browse all ${mvLibList.length} in the library ›</div>`;
+    }
   }
   h+='</div>';
   return h;
