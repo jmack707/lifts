@@ -666,8 +666,31 @@ margin-bottom:10px;padding:14px;
 .mv-period-seg{padding:8px 14px 12px;}
 .mv-period-seg .seg-opt{flex:1;text-align:center;}
 .mv-bars{padding:0 14px;display:flex;flex-direction:column;gap:11px;}
-.mv-row{display:grid;grid-template-columns:82px 1fr 44px;align-items:center;gap:9px;}
+.mv-row{display:grid;grid-template-columns:82px 1fr 44px;align-items:center;gap:9px;cursor:pointer;}
+.mv-row.open .mv-fill{filter:brightness(1.15);}
 .mv-lbl{font-size:12px;font-weight:700;color:var(--text);}
+.mv-caret{color:var(--muted2);font-size:9px;}
+.mv-detail{grid-column:1 / -1;background:var(--s2);border:1px solid var(--border);
+  border-radius:11px;padding:11px 12px;margin:2px 0 4px;}
+.mv-detail-lbl{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--muted);margin:2px 0 7px;}
+.mv-detail-lbl:not(:first-child){margin-top:13px;}
+.mv-detail-empty{font-size:12px;color:var(--muted2);padding:2px 0 4px;}
+.mv-mine-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;
+  border-bottom:1px solid var(--border2);cursor:pointer;}
+.mv-mine-row:last-child{border-bottom:none;}
+.mv-mine-ex{font-size:13px;color:var(--text);}
+.mv-mine-sets{font-family:'DM Mono',monospace;font-size:13px;font-weight:700;color:var(--text);}
+.mv-2nd{font-size:9px;color:var(--muted);font-weight:400;background:var(--s3);
+  padding:1px 4px;border-radius:3px;margin-left:2px;}
+.mv-lib-row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:5px 0;}
+.mv-lib-ex{font-size:13px;color:var(--text);cursor:pointer;flex:1;min-width:0;}
+.mv-lib-eq{color:var(--muted2);font-size:11px;}
+.mv-lib-add{flex-shrink:0;width:30px;height:30px;border-radius:8px;background:var(--s3);
+  border:1px solid var(--border2);color:var(--purple);font-size:16px;font-weight:700;cursor:pointer;}
+.mv-lib-add.have{color:var(--lower);}
+.mv-lib-add.added{color:var(--lower);}
+.mv-lib-more{font-size:12px;color:var(--purple);font-weight:700;cursor:pointer;padding:8px 0 2px;}
 .mv-track{height:16px;background:var(--s2);border-radius:8px;overflow:hidden;}
 .mv-fill{height:100%;border-radius:8px;min-width:3px;transition:width .3s;}
 .mv-val{font-family:'DM Mono',monospace;font-size:14px;font-weight:700;text-align:right;color:var(--text);}
@@ -1476,6 +1499,7 @@ let workoutProgram = null;            // {programId,dayIndex,dayName} when the a
 let workoutDate = new Date().toISOString().slice(0,10);
 let activeSection = '', activeTab = 'log', selectedEx = null, progChartMode = '1rm';
 let progView = 'exercise', progPeriod = 'week';   // Progress tab: exercise vs muscle-volume
+let mvOpenGroup = null, mvLibList = [];            // expanded muscle group + its library suggestions
 // Map the library's specific target muscles to major training groups.
 const MUSCLE_GROUP = {
   chest:'Chest',
@@ -2738,6 +2762,65 @@ function renderProgress(){
 function selProgEx(ex){ selectedEx=ex; renderProgress(); }
 function setProgView(v){ progView=v; renderProgress(); }
 function setMusclePeriod(p){ progPeriod=p; renderProgress(); }
+function toggleMuscleGroup(g){ mvOpenGroup = mvOpenGroup===g ? null : g; renderProgress(); }
+// Jump from a muscle-group contributor to that exercise's chart + history.
+function mvShowExercise(ex){ progView='exercise'; selectedEx=ex; renderProgress();
+  const pg=document.getElementById('page-progress'); if(pg) pg.scrollTo({top:0,behavior:'smooth'}); }
+// Which of your logged exercises fed a muscle group this period, and how much.
+function groupContributors(group){
+  const today=new Date().toISOString().slice(0,10);
+  const thisWeek=getWeekKey(today);
+  const cut=new Date(); cut.setDate(cut.getDate()-27); const cutStr=cut.toISOString().slice(0,10);
+  const map={};
+  (sessions||[]).forEach(s=>{
+    const inWin = progPeriod==='4wk' ? s.date>=cutStr : getWeekKey(s.date)===thisWeek;
+    if(!inWin) return;
+    (s.exercises||[]).forEach(e=>{
+      const n=(e.sets||[]).filter(st=>parseFloat(st.r)>0||parseFloat(st.w)>0).length;
+      if(!n) return;
+      const m=musclesFor(e.ex); if(!m) return;
+      if(muscleGroupOf(m.t)===group){ const o=map[e.ex]=map[e.ex]||{sets:0,role:'secondary'}; o.sets+=n; o.role='target'; }
+      else if((m.s||[]).some(sm=>muscleGroupOf(sm)===group)){ const o=map[e.ex]=map[e.ex]||{sets:0,role:'secondary'}; o.sets+=n*0.5; }
+    });
+  });
+  return Object.entries(map).map(([ex,o])=>({ex, sets:Math.round(o.sets*10)/10, role:o.role})).sort((a,b)=>b.sets-a.sets);
+}
+// Inline panel under a muscle bar: your contributors + library exercises to add.
+function muscleGroupDetail(group){
+  const mine=groupContributors(group);
+  const owned=new Set(sections.flatMap(s=>exercises[s]||[]));
+  mvLibList=(EXLIB||[]).filter(e=>muscleGroupOf(e.t)===group).sort((a,b)=>a.n.localeCompare(b.n));
+  let h='<div class="mv-detail">';
+  h+=`<div class="mv-detail-lbl">Your ${group.toLowerCase()} work ${progPeriod==='4wk'?'(last 4 wks)':'this week'}</div>`;
+  if(mine.length){
+    h+='<div class="mv-mine">'+mine.map(c=>
+      `<div class="mv-mine-row" onclick="event.stopPropagation();mvShowExercise('${esc(c.ex)}')">
+        <span class="mv-mine-ex">${c.ex}</span>
+        <span class="mv-mine-sets">${c.sets}${c.role==='secondary'?' <span class="mv-2nd">2nd</span>':''}</span>
+      </div>`).join('')+'</div>';
+  } else {
+    h+='<div class="mv-detail-empty">No sets yet in this window.</div>';
+  }
+  h+=`<div class="mv-detail-lbl">Exercises that train ${group.toLowerCase()} · tap to view or add</div>`;
+  if(!mvLibList.length){
+    h+='<div class="mv-detail-empty">Library not loaded — connect once to download it.</div>';
+  } else {
+    h+='<div class="mv-lib">'+mvLibList.slice(0,14).map((e,i)=>{
+      const have=owned.has(e.n);
+      return `<div class="mv-lib-row">
+        <span class="mv-lib-ex" onclick="event.stopPropagation();showExInfoName('${esc(e.n)}')">${e.n}<span class="mv-lib-eq">${e.eq?' · '+htmlEsc(e.eq):''}</span></span>
+        <button class="mv-lib-add ${have?'have':''}" onclick="event.stopPropagation();mvAddLib(${i},this)">${have?'✓':'＋'}</button>
+      </div>`;
+    }).join('')+'</div>';
+    if(mvLibList.length>14) h+=`<div class="mv-lib-more" onclick="event.stopPropagation();showLibrary()">Browse all ${mvLibList.length} in the library ›</div>`;
+  }
+  h+='</div>';
+  return h;
+}
+function mvAddLib(i, btn){
+  const e=mvLibList[i]; if(!e) return;
+  addFromLibrary(e, btn);
+}
 // Muscle-group volume: weekly sets per muscle, from the exercise library's muscle data.
 function renderMuscleVolume(){
   if(!LIBMUS){ ensureLibMuscle().then(()=>{ if(activeTab==='progress' && progView==='muscle') renderProgress(); }).catch(()=>{}); }
@@ -2761,11 +2844,13 @@ function renderMuscleVolume(){
     const val = progPeriod==='4wk' ? raw/4 : raw;
     const disp = Math.round(val*10)/10;
     const pct = Math.round((raw/max)*100);
-    html+=`<div class="mv-row">
-      <div class="mv-lbl">${x}</div>
+    const open = mvOpenGroup===x;
+    html+=`<div class="mv-row ${open?'open':''}" onclick="toggleMuscleGroup('${x}')">
+      <div class="mv-lbl">${x} <span class="mv-caret">${open?'▾':'▸'}</span></div>
       <div class="mv-track"><div class="mv-fill" style="width:${pct}%;background:${MG_COLOR[x]||'var(--core)'}"></div></div>
       <div class="mv-val">${disp}${progPeriod==='4wk'?'<span class="mv-per">/wk</span>':''}</div>
     </div>`;
+    if(open) html+=muscleGroupDetail(x);
   });
   html+='</div>';
   html+=`<div class="mv-hint">💡 A common hypertrophy target is ~10–20 hard sets per muscle per week.</div>`;
