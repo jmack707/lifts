@@ -210,6 +210,9 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);
   padding:1px 4px;border-radius:3px;margin-left:4px;letter-spacing:.04em;}
 .prescribe-note{font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;
   padding:0 12px 6px;}
+.last-perf{font-size:11px;color:var(--muted2);font-family:'DM Mono',monospace;
+  padding:0 12px 7px;}
+.ssr-legend + .last-perf, .ssr-card .last-perf{padding:2px 12px 4px;}
 .target-row{display:flex;align-items:center;gap:8px;padding:2px 12px 10px;}
 .target-lbl{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);}
 .target-input{width:76px;background:var(--s2);border:1px solid var(--border);border-radius:8px;
@@ -1699,9 +1702,14 @@ function buildSupersetRounds(unit){
     });
     roundsHtml+=`<div class="ssr-round"><div class="ssr-round-lbl">Round ${r+1}</div>${rowsHtml}</div>`;
   }
+  const lastLines=unit.map((ex,k)=>{
+    const lp=lastPerf(ex); if(!lp) return '';
+    return `<div class="last-perf">${String.fromCharCode(65+k)} last · ${lp.ds}: ${lp.str}</div>`;
+  }).filter(Boolean).join('');
   return `<div class="ssr-card">
     <div class="ssr-hdr">⇄ Superset ${ss}<span class="ssr-hint">alternate — A set 1 → B set 1 → repeat</span></div>
     <div class="ssr-legend">${legend}</div>
+    ${lastLines}
     ${roundsHtml}
     <div class="set-controls">
       <button class="set-ctrl-btn" onclick="ssRound('${ss}',-1)">− Round</button>
@@ -2013,6 +2021,23 @@ function setParts(ex, i){
   return {s, check, wCell, rInput, target};
 }
 
+// The most recent logged session for this exercise — shown on the card during a
+// workout so you can see what you did last time and aim to beat it.
+function lastPerf(ex){
+  const s=(sessions||[]).find(x=>(x.exercises||[]).some(e=>e.ex===ex));
+  if(!s) return null;
+  const e=s.exercises.find(e=>e.ex===ex);
+  const sets=(e.sets||[]).filter(st=>st.r>0||st.w>0);
+  if(!sets.length) return null;
+  const str=sets.map(st=> st.hold?`${st.r}s` : st.w>0?`${st.w}×${st.r}` : `BW×${st.r}`).join(' · ');
+  const ds=new Date(s.date+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'});
+  return { str, ds, orm:e.orm||0, unit:s.unit||'lb' };
+}
+function lastPerfLine(ex){
+  const lp=lastPerf(ex);
+  if(!lp) return '';
+  return `<div class="last-perf" title="Your last session">↩ Last · ${lp.ds}: ${lp.str}${lp.orm>0?` · ${lp.orm} ${lp.unit} 1RM`:''}</div>`;
+}
 function buildCard(sec, ex) {
   const d  = getDraft(ex);
   const ke = esc(ex);
@@ -2067,6 +2092,7 @@ function buildCard(sec, ex) {
     </div>
     <div class="ex-card-summary" id="esum-${ke}"></div>
     ${prescribeNote}
+    ${lastPerfLine(ex)}
     ${targetRow}
     <div class="set-rows">${rows}</div>
     <div class="set-controls">
