@@ -3181,7 +3181,7 @@ function renderProgramsModal(){
           html+=`<div class="prog-card ${cur?'on':''}">
             <div class="prog-info"><div class="prog-name-lbl">${d.name}</div>
               <div class="prog-day-preview">${d.exercises.map(e=>e.ex+' '+schemeLabel(e.scheme)).join(' · ')}</div></div>
-            <button class="prog-act-btn ${cur?'':'ghost'}" onclick="setProgramDay(${dj},${wj})">${cur?'Next':'Set'}</button>
+            <button class="prog-act-btn ${cur?'':'ghost'}" onclick="setProgramDay(${dj},${wj})">${cur?'Start ›':'Start'}</button>
           </div>`;
         });
         html+='</div>';
@@ -3192,7 +3192,7 @@ function renderProgramsModal(){
         `<div class="prog-card ${i===di?'on':''}">
           <div class="prog-info"><div class="prog-name-lbl">${d.name}</div>
             <div class="prog-day-preview">${d.exercises.map(e=>e.ex+' '+schemeLabel(e.scheme)).join(' · ')}</div></div>
-          <button class="prog-act-btn ${i===di?'':'ghost'}" onclick="setProgramDay(${i})">${i===di?'Next':'Set'}</button>
+          <button class="prog-act-btn ${i===di?'':'ghost'}" onclick="setProgramDay(${i})">${i===di?'Start ›':'Start'}</button>
         </div>`).join('')}</div>`;
     }
   }
@@ -3283,10 +3283,16 @@ function deactivateProgram(){
 
 function setProgramDay(di, wi){
   if(!programState) return;
+  // Only warn if you've actually completed a set — prescribed drafts have their
+  // target reps pre-filled, so checking w/r would nag on every day switch.
+  const hasProgress = workoutPlan && Object.values(draft).some(d=>d&&(d.sets||[]).some(s=>s.done));
+  if(hasProgress && !confirm('Start this program day? Your in-progress workout will be replaced.')) return;
   programState.dayIndex=di;
   if(wi!=null) programState.weekIndex=wi;
-  saveAll(); renderProgramsModal();
-  if(!workoutPlan) buildLog();
+  saveAll();
+  closeModal('programs');
+  startProgramDay();     // build the prescribed draft + set the active workout
+  switchTab('log');      // drop straight into the workout
 }
 
 // Pre-fill an exercise's draft with its prescribed sets. Handles four scheme
